@@ -6,8 +6,11 @@
  */
 
 #include <csignal>
+#include <string>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <iostream>
+#include <boost/lexical_cast.hpp>
 #include "WelcomeServer.h"
 #include "FileManager.h"
 #include "Logging.h"
@@ -27,8 +30,38 @@ void signal_handler(int signal)
 	exit(EXIT_FAILURE);
 }
 
+void print_usage()
+{
+	std::cout << "Usage: ./Server [LISTEN_PORT] [MAILSPOOLDIRECTORY]" << std::endl;
+}
+
 int main(int argc, char** argv)
 {
+	DEBUG(argc);
+	std::string directory_path;
+	int port;
+
+	if(argc != 3)
+	{
+		print_usage();
+		return EXIT_FAILURE;
+	}
+	else
+	{
+		try
+		{
+			port = boost::lexical_cast<int>(argv[1]);
+		}
+		catch(const boost::bad_lexical_cast& e)
+		{
+			print_usage();
+			return EXIT_FAILURE;
+		}
+
+		directory_path = argv[2];
+	}
+
+
 	if( SIG_ERR == signal(SIGINT, signal_handler) )
 	{
 		DEBUG("Error when registering signal handler, catching an inexistant signal will not work.");
@@ -44,9 +77,9 @@ int main(int argc, char** argv)
 		DEBUG("Error when registering signal handler, catching an inexistant signal will not work.");
 	}
 
-	FileManager::getInstance()->setDirectoryPath("/home/patrick/server");
+	FileManager::getInstance()->setDirectoryPath(directory_path);
 
-	ws = new WelcomeServer(6006);
+	ws = new WelcomeServer(port);
 
 	ws->run();
 

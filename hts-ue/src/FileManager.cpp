@@ -42,6 +42,8 @@ void FileManager::setDirectoryPath(std::string directory_path)
 
 		throw FileManagerException("Missing permissions.");
 	}
+
+	DEBUG("The mailspooldirectory is at " << directory_path_ << ".");
 }
 
 void FileManager::persistSendMessage(const SendMessage& msg)
