@@ -43,7 +43,6 @@ void SendMessage::inflate(const std::string& data)
 	while(true)
 	{
 		std::getline(ss, line, '\n');
-		body_.append(line);
 
 		if(line.compare(".") == 0)
 		{
@@ -53,7 +52,7 @@ void SendMessage::inflate(const std::string& data)
 		else
 		{
 			// re-append stripped newlines
-			body_.append("\n");
+			body_.append(line + "\n");
 		}
 	}
 
@@ -67,7 +66,7 @@ boost::shared_ptr<std::string> SendMessage::deflate() const
 {
 	boost::shared_ptr<std::string> deflated_string(new std::string);
 
-	*deflated_string += "SEND\n" + sender_ + "\n" + receiver_ + "\n" + title_ + "\n" + body_ + "\n";
+	*deflated_string += "SEND\n" + sender_ + "\n" + receiver_ + "\n" + title_ + "\n" + body_ + ".\n";
 
 	return deflated_string;
 }

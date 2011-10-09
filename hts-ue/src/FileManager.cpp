@@ -234,7 +234,10 @@ void FileManager::removeFile(const DelMessage& msg)
 
 	try
 	{
-		fs::remove(file_path);
+		if(fs::remove(file_path) == false)
+		{
+			throw FileManagerException("Failed to remove file at "+ file_path.string() + ", because file does not exist.");
+		}
 	}
 	catch(const fs::filesystem_error& e)
 	{

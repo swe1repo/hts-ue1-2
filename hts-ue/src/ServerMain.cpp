@@ -81,7 +81,19 @@ int main(int argc, char** argv)
 
 	ws = new WelcomeServer(port);
 
-	ws->run();
+	try
+	{
+		ws->run();
+	}
+	catch(const NetworkException& e)
+	{
+		DEBUG(e.what());
+
+		delete ws;
+		ws = 0;
+
+		return EXIT_FAILURE;
+	}
 
 	delete ws;
 	ws = 0;

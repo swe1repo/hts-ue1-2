@@ -33,7 +33,6 @@ void MailServer::clientReceivedData(boost::shared_ptr<std::string> data)
 	}
 	catch(ConversionException& e)
 	{
-		DEBUG("Caught conversionException.");
 		sendErr(socket_id_);
 	}
 }
@@ -89,7 +88,7 @@ void MailServer::handleSend(const SendMessage& msg)
 	}
 	catch(const NetworkException& e)
 	{
-		DEBUG("Failed to send reply for sendMessage request.");
+		DEBUG("Failed to send reply for sendMessage request, because " << e.what());
 	}
 }
 
@@ -103,7 +102,7 @@ void MailServer::handleList(const ListMessage& msg)
 	}
 	catch(const FileManagerException& e)
 	{
-		DEBUG("Failed to obtain message list.");
+		DEBUG("Failed to obtain message list, because " << e.what());
 	}
 
 	try
@@ -137,7 +136,8 @@ void MailServer::handleRead(const ReadMessage& msg)
 	{
 		DEBUG("Failed to get message for username "
 				<< msg.username_ << " and index "
-				<< msg.message_number_ << ".");
+				<< msg.message_number_ << ", because "
+				<< e.what());
 
 		sendErr(socket_id_);
 	}
@@ -155,7 +155,8 @@ void MailServer::handleDel(const DelMessage& msg)
 	{
 		DEBUG("Failed to delete message for username "
 				<< msg.username_ << " and index "
-				<< msg.message_number_ << ".");
+				<< msg.message_number_ << ", because "
+				<< e.what());
 
 		sendErr(socket_id_);
 	}

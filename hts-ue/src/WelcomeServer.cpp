@@ -142,14 +142,31 @@ void WelcomeServer::handleClient(int sd)
 		}
 		else if( size == -1 ) // error
 		{
-			DEBUG("Client[" << sd << "] terminated with message: "<< strerror(errno));
-			ms.clientDisconnected();
+			if(errno != EBADF)
+			{
+				DEBUG("Client[" << sd << "] terminated with message: "<< strerror(errno));
+				ms.clientDisconnected();
+			}
+
 			errno = 0;
 			break;
 		}
 	}
 
-	closeSocket(sd);
+	auto it = clients_.begin();
+	for(; it != clients_.end(); ++it)
+	{
+		if(*it == sd)
+		{
+			break;
+		}
+	}
+
+	if(it != clients_.end())
+	{
+		clients_.erase(it);
+		closeSocket(sd);
+	}
 }
 
 void WelcomeServer::shutdown()

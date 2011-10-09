@@ -44,7 +44,7 @@ void DelMessage::inflate(const std::string& data)
 	{
 		std::string error_text = "Inflation failed, because the supplied message data is not of the proper format.";
 
-		DEBUG(error_text);
+		DEBUG(error_text << ":" << line);
 		throw ConversionException(error_text);
 	}
 

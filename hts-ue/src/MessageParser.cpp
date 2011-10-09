@@ -27,7 +27,7 @@ void MessageParser::digest(boost::shared_ptr<std::string> data)
 			switch(message_type_)
 			{
 				case Message::MessageTypeSend:
-					total_lines_ = -1;
+					total_lines_ = 3;
 					break;
 				case Message::MessageTypeList:
 					total_lines_ = 1;
@@ -54,10 +54,11 @@ void MessageParser::digest(boost::shared_ptr<std::string> data)
 			break;
 		case MessageParser::MessageParserStateParsing:
 			current_message_data_.push_back(data);
+			total_lines_--;
 
 			if(message_type_ == Message::MessageTypeSend)
 			{
-				if(data->compare(".") == 0)
+				if(total_lines_ < 0 && data->compare(".") == 0)
 				{
 					// send message ends here
 					parser_state_ = MessageParser::MessageParserStateNewRequest;
@@ -65,8 +66,6 @@ void MessageParser::digest(boost::shared_ptr<std::string> data)
 			}
 			else
 			{
-				total_lines_--;
-
 				if(total_lines_ == 0)
 				{
 					// message ends here
