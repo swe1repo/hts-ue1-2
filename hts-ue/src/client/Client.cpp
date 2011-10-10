@@ -10,7 +10,8 @@
 Client::Client(int port, std::string ip_address) :
 	ip_address_(ip_address == "localhost" ? "127.0.0.1" : ip_address),
 	port_(port),
-	socket_(-1)
+	socket_(-1),
+	responseParser_(socket_, this, &Client::didReceiveResponse)
 {
 }
 
@@ -28,11 +29,11 @@ void Client::transmitMessage(const Message& msg)
 	{
 		auto pstr = msg.deflate();
 
-		int toSend = pstr->size() + 1;
+		int toSend = pstr->size();
 
 		while(toSend != 0)
 		{
-			int amount = send(socket_, &(pstr->c_str())[pstr->size() + 1 - toSend], toSend, 0);
+			int amount = send(socket_, &(pstr->c_str())[pstr->size() - toSend], toSend, 0);
 
 			DEBUG("sending.. " << amount);
 
@@ -54,6 +55,55 @@ void Client::transmitMessage(const Message& msg)
 	{
 		throw NetworkException();
 	}
+}
+
+void Client::getResponse()
+{
+	const int buffer_len = DEFAULT_BUFFER_SIZE;
+	std::vector<char> buffer(buffer_len);
+
+	while(true)
+	{
+		int size = readline(socket_, &buffer[0], buffer_len);
+
+		if( size > 0 )        // properly received data
+		{
+			DEBUG("Client[" << socket_ << "] received " << size << " bytes of data.");
+
+			int chop_size = 1; // strip newlines
+
+			if(buffer[size - 2] == '\r')
+			{
+				chop_size = 2; // strip carriage returns aswell
+			}
+
+			std::string* tmp = new std::string(buffer.begin(), buffer.begin() + size - chop_size);
+
+			boost::shared_ptr<std::string> buffer_string(tmp);
+		}
+		else if( size == 0 )  // orderly shutdown
+		{
+			DEBUG("Server[" << socket_ << "] closed connection.");
+			throw NetworkException();
+			break;
+		}
+		else if( size == -1 ) // error
+		{
+			if(errno != EBADF)
+			{
+				DEBUG("Server[" << socket_ << "] terminated with message: "<< strerror(errno));
+				throw NetworkException(errno);
+			}
+
+			errno = 0;
+			break;
+		}
+	}
+}
+
+void Client::didReceiveResponse(int socket, boost::shared_ptr<Response> response)
+{
+
 }
 
 bool Client::connectToServer()

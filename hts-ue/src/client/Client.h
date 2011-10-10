@@ -20,8 +20,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <boost/shared_ptr.hpp>
 #include "../messages/Messages.h"
 #include "../NetworkException.h"
+#include "../readline.h"
+#include "responses/Responses.h"
+#include "ResponseParser.h"
+
+#define DEFAULT_BUFFER_SIZE 1024
 
 class Client
 {
@@ -34,7 +40,11 @@ private:
 	std::string ip_address_;
 	int port_;
 	int socket_;
+	std::vector<std::string> total_data_;
+	ResponseParser responseParser_;
 
+	void didReceiveResponse(int socket, boost::shared_ptr<Response> response);
+	void getResponse();
 	bool connectToServer();
 	char printMenu();
 	void transmitMessage(const Message& msg);
@@ -46,7 +56,7 @@ private:
 		std::cin >> param;
 	}
 
-	void readStringUntil(std::string question_text, std::string param, char delimiter)
+	void readStringUntil(std::string question_text, std::string& param, char delimiter)
 	{
 		std::cout << std::endl << "  " << question_text << std::endl;
 		std::getline(std::cin, param, delimiter);

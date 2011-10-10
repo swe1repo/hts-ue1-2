@@ -38,8 +38,8 @@ private:
 
 	Message::MessageType getMessageType(std::string line);
 
-	template<typename T>
-	void setDelegate(T* delegate, void (T::*delegate_method)(int, boost::shared_ptr<Message>))
+	template<typename T, typename R>
+	void setDelegate(T* delegate, void (T::*delegate_method)(int, boost::shared_ptr<R>))
 	{
 		delegate_method_ = boost::bind(delegate_method, delegate, _1, _2);
 	}

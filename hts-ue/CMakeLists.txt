@@ -7,9 +7,10 @@ ADD_DEFINITIONS(-O0 -Werror -Wall -std=c++0x)
 FILE(GLOB SERVER_SOURCES "src/*")
 FILE(GLOB MSG_SOURCES "src/messages/*")
 FILE(GLOB CLIENT_SOURCES "src/client/*")
+FILE(GLOB RSP_SOURCES "src/client/responses/*")
 
 ADD_EXECUTABLE(Server ${SERVER_SOURCES} ${MSG_SOURCES})
-ADD_EXECUTABLE(Client ${CLIENT_SOURCES} ${MSG_SOURCES} src/Logging.h src/NetworkException.h)
+ADD_EXECUTABLE(Client ${CLIENT_SOURCES} ${MSG_SOURCES} ${RSP_SOURCES} src/Logging.h src/NetworkException.h src/readline.h src/readline.cpp)
 
 TARGET_LINK_LIBRARIES(Server boost_filesystem)
 TARGET_LINK_LIBRARIES(Server boost_thread)

@@ -66,7 +66,7 @@ boost::shared_ptr<std::string> SendMessage::deflate() const
 {
 	boost::shared_ptr<std::string> deflated_string(new std::string);
 
-	*deflated_string += "SEND\n" + sender_ + "\n" + receiver_ + "\n" + title_ + "\n" + body_ + ".\n";
+	*deflated_string += "SEND\n" + sender_ + "\n" + receiver_ + "\n" + title_ + "\n" + body_ + "\n.\n";
 
 	return deflated_string;
 }
