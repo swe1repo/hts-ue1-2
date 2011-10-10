@@ -1,9 +1,10 @@
 /*
- * ServerMain.cpp
+ * ClientMain.cpp
  *
- *  Created on: Sep 27, 2011
+ *  Created on: Oct 10, 2011
  *      Author: patrick
  */
+
 
 #include <csignal>
 #include <string>
@@ -11,20 +12,20 @@
 #include <unistd.h>
 #include <iostream>
 #include <boost/lexical_cast.hpp>
-#include "WelcomeServer.h"
-#include "FileManager.h"
-#include "Logging.h"
+#include "Client.h"
+#include "../Logging.h"
+#include "../NetworkException.h"
 
-static WelcomeServer* ws = 0;
+static Client* cl = 0;
 
 void signal_handler(int signal)
 {
 	DEBUG("Caught " << signal << ", aborting after cleanup.");
 
-	if(ws != 0)
+	if(cl != 0)
 	{
-		delete ws;
-		ws = 0;
+		delete cl;
+		cl = 0;
 	}
 
 	exit(EXIT_FAILURE);
@@ -32,12 +33,12 @@ void signal_handler(int signal)
 
 void print_usage()
 {
-	std::cout << "Usage: ./Client [LISTEN_PORT] [IP_ADDRESS]" << std::endl;
+	std::cout << "Usage: ./Server [LISTEN_PORT] [MAILSPOOLDIRECTORY]" << std::endl;
 }
 
 int main(int argc, char** argv)
 {
-	std::string directory_path;
+	std::string ip_address;
 	int port;
 
 	if(argc != 3)
@@ -57,7 +58,7 @@ int main(int argc, char** argv)
 			return EXIT_FAILURE;
 		}
 
-		directory_path = argv[2];
+		ip_address = argv[2];
 	}
 
 
@@ -76,28 +77,28 @@ int main(int argc, char** argv)
 		DEBUG("Error when registering signal handler, catching an inexistant signal will not work.");
 	}
 
-	FileManager::getInstance()->setDirectoryPath(directory_path);
-
-	ws = new WelcomeServer(port);
+	cl = new Client(port, ip_address);
 
 	try
 	{
-		ws->run();
+		cl->run();
 	}
 	catch(const NetworkException& e)
 	{
-		DEBUG(e.what());
+		std::cout << "  " << "Failed to connect to Server at [ " << ip_address << ":" << port << " ], because: "
+				  << e.what() << std::endl;
 
-		delete ws;
-		ws = 0;
+		std::cout << "  " << "Aborting." << std::endl;
 
+		delete cl;
+		cl = 0;
 		return EXIT_FAILURE;
 	}
 
-	delete ws;
-	ws = 0;
+
+	delete cl;
+	cl = 0;
 
 	return EXIT_SUCCESS;
 }
-
 

@@ -6,10 +6,14 @@ ADD_DEFINITIONS(-O0 -Werror -Wall -std=c++0x)
 
 FILE(GLOB SERVER_SOURCES "src/*")
 FILE(GLOB MSG_SOURCES "src/messages/*")
+FILE(GLOB CLIENT_SOURCES "src/client/*")
 
 ADD_EXECUTABLE(Server ${SERVER_SOURCES} ${MSG_SOURCES})
+ADD_EXECUTABLE(Client ${CLIENT_SOURCES} ${MSG_SOURCES} src/Logging.h src/NetworkException.h)
 
 TARGET_LINK_LIBRARIES(Server boost_filesystem)
 TARGET_LINK_LIBRARIES(Server boost_thread)
+
+TARGET_LINK_LIBRARIES(Client boost_thread)
 
 # ADD_EXECUTABLE(Client ClientMain.cpp)

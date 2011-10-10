@@ -26,7 +26,7 @@ void Message::inflate(const std::string& data)
 	throw ConversionException("Unimplemented.");
 }
 
-boost::shared_ptr<std::string> Message::deflate()
+boost::shared_ptr<std::string> Message::deflate() const
 {
 	throw ConversionException("Unimplemented.");
 }
