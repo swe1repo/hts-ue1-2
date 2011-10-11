@@ -47,7 +47,7 @@ boost::shared_ptr<std::string> ListMessage::deflate() const
 	return deflated_string;
 }
 
-ListMessage::MessageType ListMessage::getType()
+ListMessage::MessageType ListMessage::getType() const
 {
 	return Message::MessageTypeList;
 }

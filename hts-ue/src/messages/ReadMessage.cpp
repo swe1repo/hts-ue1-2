@@ -70,7 +70,7 @@ boost::shared_ptr<std::string> ReadMessage::deflate() const
 	return deflated_string;
 }
 
-ReadMessage::MessageType ReadMessage::getType()
+ReadMessage::MessageType ReadMessage::getType() const
 {
 	return Message::MessageTypeRead;
 }

@@ -16,9 +16,9 @@ public:
 	DelMessage();
 	DelMessage(const std::string& data);
 
+	virtual MessageType getType() const;
 	void inflate(const std::string& data);
 	virtual boost::shared_ptr<std::string> deflate() const;
-	virtual MessageType getType();
 
 	std::string username_;
 	int message_number_;

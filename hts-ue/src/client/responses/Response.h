@@ -21,7 +21,7 @@ class Response
 public:
 	enum ResponseType
 	{
-		ResponseTypeOk,
+		ResponseTypeOk = 0,
 		ResponseTypeErr,
 		ResponseTypeList,
 		ResponseTypeRead

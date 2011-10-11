@@ -90,3 +90,8 @@ void MessageParser::digest(boost::shared_ptr<std::string> data)
 			break;
 	}
 }
+
+MessageParser::MessageParserState MessageParser::getParserState()
+{
+	return parser_state_;
+}

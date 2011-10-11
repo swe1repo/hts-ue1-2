@@ -7,11 +7,10 @@
 
 #include "ReadResponse.h"
 
-ReadResponse::ReadResponse() :
-	Response(Response::ResponseTypeRead)
+ReadResponse::ReadResponse(const SendMessage& msg) :
+	Response(Response::ResponseTypeRead),
+	data_(msg)
 {
-	// TODO Auto-generated constructor stub
-
 }
 
 SendMessage ReadResponse::getMessage()

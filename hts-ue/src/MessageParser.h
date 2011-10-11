@@ -19,6 +19,12 @@
 class MessageParser
 {
 public:
+	enum MessageParserState
+	{
+		MessageParserStateNewRequest,
+		MessageParserStateParsing
+	};
+
 	template <typename T>
 	MessageParser(int socket_id, T* delegate, void (T::*delegate_method)(int, boost::shared_ptr<Message>)) :
 		socket_id_(socket_id),
@@ -29,13 +35,8 @@ public:
 	}
 
 	void digest(boost::shared_ptr<std::string> data);
+	MessageParserState getParserState();
 private:
-	enum MessageParserState
-	{
-		MessageParserStateNewRequest,
-		MessageParserStateParsing
-	};
-
 	Message::MessageType getMessageType(std::string line);
 
 	template<typename T, typename R>

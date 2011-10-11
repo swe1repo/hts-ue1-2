@@ -14,7 +14,8 @@
 class NetworkException : public std::exception
 {
 public:
-	NetworkException()
+	NetworkException() :
+		errno_(0)
 	{
 	}
 
@@ -31,7 +32,7 @@ public:
     {
         return strerror(errno_);
     }
-private:
+
 	int errno_;
 };
 

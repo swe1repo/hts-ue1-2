@@ -11,7 +11,9 @@ Client::Client(int port, std::string ip_address) :
 	ip_address_(ip_address == "localhost" ? "127.0.0.1" : ip_address),
 	port_(port),
 	socket_(-1),
-	responseParser_(socket_, this, &Client::didReceiveResponse)
+	response_parser_(socket_, this, &Client::didReceiveResponse),
+	last_type_(Message::MessageTypeInvalid),
+	end_receiving_(false)
 {
 }
 
@@ -25,6 +27,8 @@ Client::~Client()
 
 void Client::transmitMessage(const Message& msg)
 {
+	last_type_ = msg.getType();
+
 	try
 	{
 		auto pstr = msg.deflate();
@@ -34,8 +38,6 @@ void Client::transmitMessage(const Message& msg)
 		while(toSend != 0)
 		{
 			int amount = send(socket_, &(pstr->c_str())[pstr->size() - toSend], toSend, 0);
-
-			DEBUG("sending.. " << amount);
 
 			if(amount == -1)
 			{
@@ -68,8 +70,6 @@ void Client::getResponse()
 
 		if( size > 0 )        // properly received data
 		{
-			DEBUG("Client[" << socket_ << "] received " << size << " bytes of data.");
-
 			int chop_size = 1; // strip newlines
 
 			if(buffer[size - 2] == '\r')
@@ -80,6 +80,14 @@ void Client::getResponse()
 			std::string* tmp = new std::string(buffer.begin(), buffer.begin() + size - chop_size);
 
 			boost::shared_ptr<std::string> buffer_string(tmp);
+
+			response_parser_.digest(buffer_string, last_type_);
+
+			if(end_receiving_ == true)
+			{
+				end_receiving_ = false;
+				break;
+			}
 		}
 		else if( size == 0 )  // orderly shutdown
 		{
@@ -103,7 +111,48 @@ void Client::getResponse()
 
 void Client::didReceiveResponse(int socket, boost::shared_ptr<Response> response)
 {
+	end_receiving_ = true;
 
+	switch(response->getType())
+	{
+		case Response::ResponseTypeOk:
+			std::cout << "  " << "Received Response: OK" << std::endl << std::endl;
+			break;
+		case Response::ResponseTypeErr:
+			std::cout << "  " << "Received Response: ERR" << std::endl << std::endl;
+			break;
+		case Response::ResponseTypeList:
+		{
+			std::cout << "  " << "Received Response: LIST with "
+					  << static_cast<ListResponse&>(*response).titles_.size()
+					  << " entries." << std::endl << std::endl;
+
+			auto vec = static_cast<ListResponse&>(*response).titles_;
+			for(unsigned int i = 0; i < vec.size(); ++i)
+			{
+				std::cout << "  " << "[ " << i << " ] .. Entry: " << vec[i] << std::endl;
+			}
+			break;
+		}
+		case Response::ResponseTypeRead:
+		{
+			std::cout << "  " << "Received Response: READ" << std::endl << std::endl;
+
+			SendMessage sm = static_cast<ReadResponse&>(*response).getMessage();
+
+			std::cout << " - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
+			std::cout << "  " << "-- Sender: "   << sm.sender_   << std::endl;
+			std::cout << "  " << "-- Receiver: " << sm.receiver_ << std::endl;
+			std::cout << "  " << "-- Title: "    << sm.title_    << std::endl;
+			std::cout << " - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
+			std::cout << "  " << "-- Body: " << sm.body_ << std::endl;
+			std::cout << " - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
+			break;
+		}
+		default:
+			DEBUG("Unknown response received. Discarding.");
+			break;
+	}
 }
 
 bool Client::connectToServer()
@@ -206,8 +255,14 @@ void Client::run()
 				break;
 			}
 			default:
+				ctrl = 'c';
 				std::cout << std::endl << "  " << "Please choose a valid menu entry." << std::endl;
 				break;
+		}
+
+		if(ctrl != 'c')
+		{
+			getResponse();
 		}
 	}
 }

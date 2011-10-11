@@ -8,6 +8,6 @@
 #include "ErrResponse.h"
 
 ErrResponse::ErrResponse() :
-	Response(Response::ResponseTypeRead)
+	Response(Response::ResponseTypeErr)
 {
 }

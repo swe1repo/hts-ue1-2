@@ -32,7 +32,7 @@ public:
 	Message();
 	virtual ~Message();
 
-	virtual MessageType getType();
+	virtual MessageType getType() const;
 	virtual void inflate(const std::string& data);
 	virtual boost::shared_ptr<std::string> deflate() const;
 };

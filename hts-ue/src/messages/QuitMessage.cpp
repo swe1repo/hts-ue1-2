@@ -41,7 +41,7 @@ boost::shared_ptr<std::string> QuitMessage::deflate() const
 	return deflated_string;
 }
 
-QuitMessage::MessageType QuitMessage::getType()
+QuitMessage::MessageType QuitMessage::getType() const
 {
 	return Message::MessageTypeQuit;
 }

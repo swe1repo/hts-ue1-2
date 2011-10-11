@@ -16,7 +16,7 @@ Message::~Message()
 {
 }
 
-Message::MessageType Message::getType()
+Message::MessageType Message::getType() const
 {
 	return Message::MessageTypeInvalid;
 }

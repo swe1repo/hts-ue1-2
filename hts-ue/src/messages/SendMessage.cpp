@@ -71,7 +71,7 @@ boost::shared_ptr<std::string> SendMessage::deflate() const
 	return deflated_string;
 }
 
-SendMessage::MessageType SendMessage::getType()
+SendMessage::MessageType SendMessage::getType() const
 {
 	return Message::MessageTypeSend;
 }

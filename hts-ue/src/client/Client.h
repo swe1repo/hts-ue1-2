@@ -41,7 +41,9 @@ private:
 	int port_;
 	int socket_;
 	std::vector<std::string> total_data_;
-	ResponseParser responseParser_;
+	ResponseParser response_parser_;
+	Message::MessageType last_type_;
+	bool end_receiving_;
 
 	void didReceiveResponse(int socket, boost::shared_ptr<Response> response);
 	void getResponse();

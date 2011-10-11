@@ -14,9 +14,10 @@ class ListResponse : public Response
 {
 public:
 	ListResponse(const std::string& data);
+
+	std::vector<std::string> titles_;
 private:
 	void inflate(const std::string& data);
-	std::vector<std::string> titles_;
 };
 
 #endif /* LISTRESPONSE_H_ */

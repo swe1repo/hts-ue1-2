@@ -85,14 +85,21 @@ int main(int argc, char** argv)
 	}
 	catch(const NetworkException& e)
 	{
-		std::cout << "  " << "Failed to connect to Server at [ " << ip_address << ":" << port << " ], because: "
-				  << e.what() << std::endl;
+		if(e.errno_ != 0)
+		{
+			std::cout << "  " << "Failed to connect to Server at [ " << ip_address << ":" << port << " ], because: "
+					  << e.what() << std::endl;
 
-		std::cout << "  " << "Aborting." << std::endl;
+			std::cout << "  " << "Aborting." << std::endl;
 
-		delete cl;
-		cl = 0;
-		return EXIT_FAILURE;
+			delete cl;
+			cl = 0;
+			return EXIT_FAILURE;
+		}
+		else
+		{
+			std::cout << "  " << "Connection was successfully closed." << std::endl << std::endl;
+		}
 	}
 
 

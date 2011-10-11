@@ -16,9 +16,9 @@ public:
 	ListMessage();
 	ListMessage(const std::string& data);
 
+	virtual MessageType getType() const;
 	virtual void inflate(const std::string& data);
 	virtual boost::shared_ptr<std::string> deflate() const;
-	virtual MessageType getType();
 
 	std::string username_;
 };

@@ -14,6 +14,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 #include "../messages/Messages.h"
+#include "../MessageParser.h"
 #include "responses/Responses.h"
 
 class ResponseParser
@@ -22,6 +23,8 @@ public:
 	template <typename T>
 	ResponseParser(int socket_id, T* delegate, void (T::*delegate_method)(int, boost::shared_ptr<Response>)) :
 		socket_id_(socket_id),
+		didReceiveMsg_(false),
+		message_parser_(socket_id, this, &ResponseParser::finishedSendMessage),
 		parser_state_(MessageParserStateNewRequest),
 		total_lines_(0)
 	{
@@ -29,12 +32,8 @@ public:
 	}
 
 	void digest(boost::shared_ptr<std::string> data, Message::MessageType request_type);
+	void finishedSendMessage(int sd, boost::shared_ptr<Message> msg);
 private:
-	ResponseParser(const ResponseParser& rp)
-	{
-		;
-	}
-
 	enum MessageParserState
 	{
 		MessageParserStateNewRequest,
@@ -42,6 +41,9 @@ private:
 	};
 
 	int socket_id_;
+	bool didReceiveMsg_;
+	MessageParser message_parser_;
+	SendMessage tmp_msg_;
 	MessageParserState parser_state_;
 	int total_lines_;
 	boost::function<void(int, boost::shared_ptr<Response>)>  delegate_method_;

@@ -8,7 +8,7 @@
 #include "ListResponse.h"
 
 ListResponse::ListResponse(const std::string& data) :
-	Response(Response::ResponseTypeRead)
+	Response(Response::ResponseTypeList)
 {
 	inflate(data);
 }

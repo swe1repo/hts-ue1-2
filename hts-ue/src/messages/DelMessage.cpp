@@ -70,7 +70,7 @@ boost::shared_ptr<std::string> DelMessage::deflate() const
 	return deflated_string;
 }
 
-DelMessage::MessageType DelMessage::getType()
+DelMessage::MessageType DelMessage::getType() const
 {
 	return Message::MessageTypeDel;
 }

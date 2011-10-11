@@ -8,8 +8,6 @@
 #ifndef LOGGING_H_
 #define LOGGING_H_
 
-#define VERBOSE
-
 #ifdef VERBOSE
 	#include <iostream>
 	#define DEBUG(s) std::cerr << __FILE__ << "::" << __LINE__ << "::" << __FUNCTION__ << "\t" << s << std::endl
