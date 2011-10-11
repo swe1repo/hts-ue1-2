@@ -12,14 +12,6 @@
     File: WelcomeServer.cpp
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
-
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: WelcomeServer.cpp
-
-*/
 
 #include "WelcomeServer.h"
 

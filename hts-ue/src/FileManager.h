@@ -12,14 +12,7 @@
     File: FileManager.h
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
 
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: FileManager.h
-
-*/
 
 #ifndef FILEMANAGER_H_
 #define FILEMANAGER_H_

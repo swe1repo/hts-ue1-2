@@ -12,14 +12,6 @@
     File: WelcomeServer.h
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
-
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: WelcomeServer.h
-
-*/
 
 #ifndef WELCOMESERVER_H_
 #define WELCOMESERVER_H_

@@ -12,14 +12,6 @@
     File: FileManager.cpp
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
-
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: FileManager.cpp
-
-*/
 
 #include "FileManager.h"
 #include "Logging.h"

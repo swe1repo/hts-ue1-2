@@ -12,14 +12,6 @@
     File: ServerMain.cpp
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
-
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: ServerMain.cpp
-
-*/
 
 #include <csignal>
 #include <string>

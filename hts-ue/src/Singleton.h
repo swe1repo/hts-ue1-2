@@ -12,14 +12,6 @@
     File: Singleton.h
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
-
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: Singleton.h
-
-*/
 
 #ifndef SINGLETON_H_
 #define SINGLETON_H_

@@ -12,14 +12,6 @@
     File: MailServer.h
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
-
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: MailServer.h
-
-*/
 
 #ifndef MAILSERVER_H_
 #define MAILSERVER_H_

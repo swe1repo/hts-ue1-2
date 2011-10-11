@@ -12,14 +12,6 @@
     File: foreach.h
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
-
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: foreach.h
-
-*/
 
 #ifndef FOREACH_H_
 #define FOREACH_H_

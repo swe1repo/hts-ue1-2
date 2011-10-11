@@ -12,14 +12,6 @@
     File: MessageParser.h
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
-
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: MessageParser.h
-
-*/
 
 #ifndef MESSAGEPARSER_H_
 #define MESSAGEPARSER_H_

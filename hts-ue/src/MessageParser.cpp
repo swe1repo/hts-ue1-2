@@ -12,14 +12,6 @@
     File: MessageParser.cpp
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
-
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: MessageParser.cpp
-
-*/
 
 #include "MessageParser.h"
 

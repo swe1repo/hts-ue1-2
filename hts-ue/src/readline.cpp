@@ -12,14 +12,7 @@
     File: readline.cpp
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
 
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: readline.cpp
-
-*/
 #include "readline.h"
 #include <errno.h>
 

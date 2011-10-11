@@ -12,14 +12,6 @@
     File: Server.h
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
-
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: Server.h
-
-*/
 
 #ifndef SERVER_H_
 #define SERVER_H_

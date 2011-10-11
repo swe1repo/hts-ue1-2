@@ -12,14 +12,7 @@
     File: Logging.h
 
 */
-    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
 
-
-    By Benjamin Steindl & Patrick Schwab
-
-    File: Logging.h
-
-*/
 
 #ifndef LOGGING_H_
 #define LOGGING_H_
