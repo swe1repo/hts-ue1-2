@@ -10,8 +10,6 @@
 
 Server::Server()
 {
-	// TODO Auto-generated constructor stub
-
 }
 
 void Server::closeSocket(int sd)
@@ -54,9 +52,4 @@ void Server::sendMsg(int sd, const std::string& msg)
 	}
 
 	DEBUG("Sent: " << msg << ", bytes: " << msg.size());
-
-	for(unsigned int i = 0; i < msg.size(); i++)
-	{
-		DEBUG(static_cast<int>((msg.data())[i]));
-	}
 }
