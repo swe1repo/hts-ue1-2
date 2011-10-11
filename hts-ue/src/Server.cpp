@@ -1,9 +1,25 @@
 /*
- * Server.cpp
- *
- *  Created on: Oct 4, 2011
- *      Author: patrick
- */
+
+    .-..-..-----. .--. .-..-. .--.   ,-.
+    : :; :`-. .-': .--': :: :: .--'.'  :
+    :    :  : :  `. `. : :: :: `;   `: :
+    : :: :  : :   _`, :: :; :: :__   : :
+    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
+
+
+    By Benjamin Steindl & Patrick Schwab
+
+    File: Server.cpp
+
+*/
+    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
+
+
+    By Benjamin Steindl & Patrick Schwab
+
+    File: Server.cpp
+
+*/
 
 #include "Server.h"
 #include "Logging.h"

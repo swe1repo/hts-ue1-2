@@ -1,9 +1,25 @@
 /*
- * MessageParser.cpp
- *
- *  Created on: Sep 30, 2011
- *      Author: patrick
- */
+
+    .-..-..-----. .--. .-..-. .--.   ,-.
+    : :; :`-. .-': .--': :: :: .--'.'  :
+    :    :  : :  `. `. : :: :: `;   `: :
+    : :: :  : :   _`, :: :; :: :__   : :
+    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
+
+
+    By Benjamin Steindl & Patrick Schwab
+
+    File: MessageParser.cpp
+
+*/
+    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
+
+
+    By Benjamin Steindl & Patrick Schwab
+
+    File: MessageParser.cpp
+
+*/
 
 #include "MessageParser.h"
 

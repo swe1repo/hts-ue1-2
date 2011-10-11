@@ -1,9 +1,25 @@
 /*
- * NetworkException.h
- *
- *  Created on: Sep 27, 2011
- *      Author: patrick
- */
+
+    .-..-..-----. .--. .-..-. .--.   ,-.
+    : :; :`-. .-': .--': :: :: .--'.'  :
+    :    :  : :  `. `. : :: :: `;   `: :
+    : :: :  : :   _`, :: :; :: :__   : :
+    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
+
+
+    By Benjamin Steindl & Patrick Schwab
+
+    File: NetworkException.h
+
+*/
+    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
+
+
+    By Benjamin Steindl & Patrick Schwab
+
+    File: NetworkException.h
+
+*/
 
 #ifndef NETWORKEXCEPTION_H_
 #define NETWORKEXCEPTION_H_

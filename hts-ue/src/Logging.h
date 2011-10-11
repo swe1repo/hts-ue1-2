@@ -1,9 +1,25 @@
 /*
- * Logging.h
- *
- *  Created on: Sep 27, 2011
- *      Author: patrick
- */
+
+    .-..-..-----. .--. .-..-. .--.   ,-.
+    : :; :`-. .-': .--': :: :: .--'.'  :
+    :    :  : :  `. `. : :: :: `;   `: :
+    : :: :  : :   _`, :: :; :: :__   : :
+    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
+
+
+    By Benjamin Steindl & Patrick Schwab
+
+    File: Logging.h
+
+*/
+    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
+
+
+    By Benjamin Steindl & Patrick Schwab
+
+    File: Logging.h
+
+*/
 
 #ifndef LOGGING_H_
 #define LOGGING_H_

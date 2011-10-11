@@ -1,9 +1,25 @@
 /*
- * ServerMain.cpp
- *
- *  Created on: Sep 27, 2011
- *      Author: patrick
- */
+
+    .-..-..-----. .--. .-..-. .--.   ,-.
+    : :; :`-. .-': .--': :: :: .--'.'  :
+    :    :  : :  `. `. : :: :: `;   `: :
+    : :: :  : :   _`, :: :; :: :__   : :
+    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
+
+
+    By Benjamin Steindl & Patrick Schwab
+
+    File: ServerMain.cpp
+
+*/
+    :_;:_;  :_;  `.__.'`.__.'`.__.'  :_;
+
+
+    By Benjamin Steindl & Patrick Schwab
+
+    File: ServerMain.cpp
+
+*/
 
 #include <csignal>
 #include <string>
