@@ -33,7 +33,7 @@ void signal_handler(int signal)
 
 void print_usage()
 {
-	std::cout << "Usage: ./Server [LISTEN_PORT] [MAILSPOOLDIRECTORY]" << std::endl;
+	std::cout << "Usage: ./Client [LISTEN_PORT] [IP_ADRESS]" << std::endl;
 }
 
 int main(int argc, char** argv)

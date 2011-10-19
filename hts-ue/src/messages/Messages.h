@@ -13,5 +13,6 @@
 #include "ReadMessage.h"
 #include "DelMessage.h"
 #include "QuitMessage.h"
+#include "LoginMessage.h"
 
 #endif /* MESSAGES_H_ */

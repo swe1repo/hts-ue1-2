@@ -48,6 +48,7 @@ void MailServer::clientReceivedData(boost::shared_ptr<std::string> data)
 void MailServer::messageReceived(int sd, boost::shared_ptr<Message> msg)
 {
 	DEBUG("A message has been dispatched!");
+
 	switch((*msg).getType())
 	{
 		case Message::MessageTypeSend:
@@ -64,6 +65,9 @@ void MailServer::messageReceived(int sd, boost::shared_ptr<Message> msg)
 			break;
 		case Message::MessageTypeQuit:
 			handleQuit(static_cast<QuitMessage&>(*msg));
+			break;
+		case Message::MessageTypeLogin:
+			handleLogin(static_cast<LoginMessage&>(*msg));
 			break;
 		case Message::MessageTypeInvalid:
 		default:
@@ -173,5 +177,11 @@ void MailServer::handleDel(const DelMessage& msg)
 void MailServer::handleQuit(const QuitMessage& msg)
 {
 	closeSocket(socket_id_);
+}
+
+void MailServer::handleLogin(const LoginMessage& msg)
+{
+	// TODO: LDAP
+	sendOk(socket_id_);
 }
 

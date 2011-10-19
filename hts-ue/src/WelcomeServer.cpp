@@ -98,8 +98,7 @@ void WelcomeServer::mainLoop()
 
 			try
 			{
-				// create thread here
-				handleClient(client_socket);
+				boost::thread th(boost::bind(&WelcomeServer::handleClient, this, client_socket));
 			}
 			catch(NetworkException& e)
 			{
@@ -160,6 +159,8 @@ void WelcomeServer::handleClient(int sd)
 			break;
 		}
 	}
+
+#warning TODO: remove this, clients_.erase is not an atomic operation
 
 	auto it = clients_.begin();
 	for(; it != clients_.end(); ++it)

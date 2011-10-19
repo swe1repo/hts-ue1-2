@@ -19,5 +19,3 @@ TARGET_LINK_LIBRARIES(Server boost_filesystem)
 TARGET_LINK_LIBRARIES(Server boost_thread)
 
 TARGET_LINK_LIBRARIES(Client boost_thread)
-
-# ADD_EXECUTABLE(Client ClientMain.cpp)

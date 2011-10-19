@@ -36,6 +36,8 @@ Message* MessageFactory::newInstance(const std::vector< boost::shared_ptr<std::s
 		return new DelMessage(*pstring_data);
 	case Message::MessageTypeQuit:
 		return new QuitMessage(*pstring_data);
+	case Message::MessageTypeLogin:
+		return new LoginMessage(*pstring_data);
 	case Message::MessageTypeInvalid:
 	default:
 		std::string text("MessageFactory: Unknown type can't be instantiated.");
@@ -64,6 +66,10 @@ Message::MessageType MessageFactory::getMessageType(std::string line)
 	else if(line.compare("QUIT") == 0)
 	{
 		return Message::MessageTypeQuit;
+	}
+	else if(line.compare("LOGIN") == 0)
+	{
+		return Message::MessageTypeLogin;
 	}
 	else
 	{

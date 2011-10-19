@@ -218,6 +218,10 @@ boost::shared_ptr<SendMessage> FileManager::getMessageForRead(const ReadMessage&
 	{
 		throw FileManagerException("File can't be converted/opened.");
 	}
+
+#ifdef __CDT_PARSER__
+	return boost::shared_ptr<SendMessage>();
+#endif
 }
 
 void FileManager::removeFile(const DelMessage& msg)
@@ -296,4 +300,8 @@ boost::shared_ptr<SendMessage> FileManager::messageFromFile(std::string filename
 	{
 		throw FileManagerException("Failed to convert " + filename + " to message." + e.what());
 	}
+
+#ifdef __CDT_PARSER__
+	return boost::shared_ptr<SendMessage>();
+#endif
 }

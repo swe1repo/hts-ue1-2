@@ -44,6 +44,7 @@ private:
     void handleRead(const ReadMessage& msg);
     void handleDel (const DelMessage& msg);
     void handleQuit(const QuitMessage& msg);
+    void handleLogin(const LoginMessage& msg);
 
     friend class WelcomeServer;
 };

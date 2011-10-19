@@ -40,7 +40,7 @@ void signal_handler(int signal)
 
 void print_usage()
 {
-	std::cout << "Usage: ./Client [LISTEN_PORT] [IP_ADDRESS]" << std::endl;
+	std::cout << "Usage: ./Server [LISTEN_PORT] [DIRECTORY]" << std::endl;
 }
 
 int main(int argc, char** argv)

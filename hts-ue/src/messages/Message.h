@@ -26,6 +26,7 @@ public:
 		MessageTypeRead,
 		MessageTypeDel,
 		MessageTypeQuit,
+		MessageTypeLogin,
 		MessageTypeInvalid
 	};
 

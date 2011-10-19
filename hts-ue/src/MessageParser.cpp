@@ -42,6 +42,7 @@ void MessageParser::digest(boost::shared_ptr<std::string> data)
 					break;
 				case Message::MessageTypeRead:
 				case Message::MessageTypeDel:
+				case Message::MessageTypeLogin:
 					total_lines_ = 2;
 					break;
 				case Message::MessageTypeQuit:
