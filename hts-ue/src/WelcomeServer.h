@@ -55,7 +55,7 @@ private:
     int buffer_size_;
     int queue_size_;
     int port_;
-    std::vector<int> clients_;
+    boost::thread_group clients_;
 };
 
 #endif /* WELCOMESERVER_H_ */

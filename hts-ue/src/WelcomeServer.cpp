@@ -94,11 +94,9 @@ void WelcomeServer::mainLoop()
 		}
 		else
 		{
-			clients_.push_back(client_socket);
-
 			try
 			{
-				boost::thread th(boost::bind(&WelcomeServer::handleClient, this, client_socket));
+				clients_.create_thread(boost::bind(&WelcomeServer::handleClient, this, client_socket));
 			}
 			catch(NetworkException& e)
 			{
@@ -158,24 +156,21 @@ void WelcomeServer::handleClient(int sd)
 			errno = 0;
 			break;
 		}
-	}
 
-#warning TODO: remove this, clients_.erase is not an atomic operation
-
-	auto it = clients_.begin();
-	for(; it != clients_.end(); ++it)
-	{
-		if(*it == sd)
+		try
+		{
+#warning TODO: place somewhere else, half-sent messages may be lost at this point
+			// the server may be interrupted at this point
+			boost::this_thread::interruption_point();
+		}
+		catch(const boost::thread_interrupted& e)
 		{
 			break;
 		}
 	}
 
-	if(it != clients_.end())
-	{
-		clients_.erase(it);
-		closeSocket(sd);
-	}
+	// execution finished, for whatever reason -> close the clients socket
+	closeSocket(sd);
 }
 
 void WelcomeServer::shutdown()
@@ -188,10 +183,7 @@ void WelcomeServer::shutdown()
 
 	welcome_socket_ = -1;
 
-	foreach(int client, clients_)
-	{
-		closeSocket(client);
-	}
-
-	clients_.clear();
+	// end all threads here
+	clients_.interrupt_all();
+	clients_.join_all();
 }
