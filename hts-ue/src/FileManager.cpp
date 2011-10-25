@@ -85,6 +85,10 @@ void FileManager::persistSendMessage(const SendMessage& msg)
 
 	if(count_cache_.find(msg.receiver_) == count_cache_.end())
 	{
+
+		// obtain shared access for reading - this is a scoped lock
+		boost::shared_lock<boost::shared_mutex> lock(file_lock_);
+
 		int count = 0;
 
 		fs::directory_iterator end;
@@ -116,6 +120,9 @@ void FileManager::persistSendMessage(const SendMessage& msg)
 	fs::path msg_file = user_directory / fs::path( num_msg ) ;
 
 	fs::ofstream of;
+
+	// get exclusive access for writing - this lock is scoped
+	boost::unique_lock<boost::shared_mutex> lock(file_lock_);
 
 	of.open( msg_file );
 
@@ -174,6 +181,10 @@ std::vector<std::string> FileManager::getMessageList(const ListMessage& msg)
 	}
 
 	fs::directory_iterator end;
+
+
+	// obtain shared access for reading - this is a scoped lock
+	boost::shared_lock<boost::shared_mutex> lock(file_lock_);
 
 	for(fs::directory_iterator it(user_directory); it != end; it++)
 	{
@@ -246,6 +257,9 @@ void FileManager::removeFile(const DelMessage& msg)
 
 	try
 	{
+		// get exclusive access for writing - this lock is scoped
+		boost::unique_lock<boost::shared_mutex> lock(file_lock_);
+
 		if(fs::remove(file_path) == false)
 		{
 			throw FileManagerException("Failed to remove file at "+ file_path.string() + ", because file does not exist.");
@@ -262,6 +276,9 @@ boost::shared_ptr<SendMessage> FileManager::messageFromFile(std::string filename
 	fs::ifstream ifs;
 
 	fs::path msg_file(filename);
+
+	// obtain shared access for reading - this is a scoped lock
+	boost::shared_lock< boost::shared_mutex > lock(file_lock_);
 
 	ifs.open( msg_file );
 

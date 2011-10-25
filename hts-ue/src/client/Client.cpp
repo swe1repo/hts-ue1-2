@@ -372,7 +372,8 @@ char Client::createMenuWithCollection(const std::vector<std::string>& collection
 	std::cout << std::endl;
 
 	char choice;
-	std::cin >> choice;
+
+	readParam("Please choose your option.", choice);
 
 	return choice;
 }

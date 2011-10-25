@@ -188,7 +188,7 @@ void WelcomeServer::shutdown()
 
 	welcome_socket_ = -1;
 
-	// end all threads here
+	// end all running threads/clients here
 	clients_.interrupt_all();
 	clients_.join_all();
 }
