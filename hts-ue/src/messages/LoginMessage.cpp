@@ -46,3 +46,8 @@ boost::shared_ptr<std::string> LoginMessage::deflate() const
 
 	return deflated_string;
 }
+
+Message::MessageType LoginMessage::getType() const
+{
+	return Message::MessageTypeLogin;
+}

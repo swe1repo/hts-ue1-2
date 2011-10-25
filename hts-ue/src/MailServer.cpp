@@ -18,12 +18,14 @@
 
 MailServer::MailServer(int sd) :
 	parser_(sd, this, &MailServer::messageReceived),
-	socket_id_(sd)
+	socket_id_(sd),
+	loginManager_()
 {
 }
 
-MailServer::~MailServer()
+bool MailServer::didFinishMessage()
 {
+	return parser_.getParserState() == MessageParser::MessageParserStateNewRequest ? true : false;
 }
 
 void MailServer::clientConnected()
@@ -182,6 +184,8 @@ void MailServer::handleQuit(const QuitMessage& msg)
 void MailServer::handleLogin(const LoginMessage& msg)
 {
 	// TODO: LDAP
+	loginManager_.sendLDAPRequest(msg.username_, msg.password_);
+
 	sendOk(socket_id_);
 }
 

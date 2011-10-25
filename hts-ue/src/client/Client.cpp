@@ -13,7 +13,8 @@ Client::Client(int port, std::string ip_address) :
 	socket_(-1),
 	response_parser_(socket_, this, &Client::didReceiveResponse),
 	last_type_(Message::MessageTypeInvalid),
-	end_receiving_(false)
+	end_receiving_(false),
+	userManager_()
 {
 }
 
@@ -116,9 +117,21 @@ void Client::didReceiveResponse(int socket, boost::shared_ptr<Response> response
 	switch(response->getType())
 	{
 		case Response::ResponseTypeOk:
+			if(userManager_.getUsername().empty() == false &&
+			   userManager_.isLoggedIn() == false)
+			{
+				userManager_.loginSucceeded();
+			}
+
 			std::cout << "  " << "Received Response: OK" << std::endl << std::endl;
 			break;
 		case Response::ResponseTypeErr:
+			if(userManager_.getUsername().empty() == false &&
+			   userManager_.isLoggedIn() == false)
+			{
+				userManager_.loginFailed();
+			}
+
 			std::cout << "  " << "Received Response: ERR" << std::endl << std::endl;
 			break;
 		case Response::ResponseTypeList:
@@ -192,79 +205,146 @@ void Client::run()
 		throw NetworkException(errno);
 	}
 
-	char ctrl;
-	while(ctrl != '5')
+	bool doQuit = false;
+
+	while(!doQuit)
 	{
-		switch(ctrl = printMenu())
+		try
 		{
-			case '1': // SEND
+			if(userManager_.isLoggedIn())
 			{
-				SendMessage sm;
-
-				readParam("Please enter the receiver's name.", sm.receiver_);
-
-				readParam("Please enter your name.", sm.sender_);
-
-				readParam("Please enter the message's title.", sm.title_);
-
-				readStringUntil("Please enter the message you want to transmit. Terminate with $.",
-								sm.body_,
-								'$');
-
-				transmitMessage(sm);
-				break;
+				doQuit = presentMainMenu();
 			}
-			case '2': // LIST
+			else
 			{
-				ListMessage lm;
-
-				readParam("Please enter the username for whom you want to request a message list.", lm.username_);
-
-				transmitMessage(lm);
-				break;
+				doQuit = presentLoginMenu();
 			}
-			case '3': // READ
-			{
-				ReadMessage rm;
-
-				readParam("Please enter the receiver's username.", rm.username_);
-
-				readParam("Please enter the number of the message to display. [0 based index]", rm.message_number_);
-
-				transmitMessage(rm);
-				break;
-			}
-			case '4': // DEL
-			{
-				DelMessage dm;
-
-				readParam("Please enter the receiver's username.", dm.username_);
-
-				readParam("Please enter the number of the message to delete. [0 based index]", dm.message_number_);
-
-				transmitMessage(dm);
-				break;
-			}
-			case '5': // QUIT
-			{
-				QuitMessage qm;
-
-				std::cout << std::endl << "  " << "You requested the server to close the connection." << std::endl;
-
-				transmitMessage(qm);
-				break;
-			}
-			default:
-				ctrl = 'c';
-				std::cout << std::endl << "  " << "Please choose a valid menu entry." << std::endl;
-				break;
+		}
+		catch(const InvalidEntryException& e)
+		{
+			DEBUG(e.what());
+			continue;
 		}
 
-		if(ctrl != 'c')
-		{
-			getResponse();
-		}
+		// receive the servers response -- blocking
+		getResponse();
 	}
+}
+
+bool Client::presentMainMenu()
+{
+	char ctrl;
+	bool doQuit = false;
+
+	switch(ctrl = printMenu())
+	{
+		case '1': // SEND
+		{
+			SendMessage sm;
+
+			readParam("Please enter the receiver's name.", sm.receiver_);
+
+			readParam("Please enter your name.", sm.sender_);
+
+			readParam("Please enter the message's title.", sm.title_);
+
+			readStringUntil("Please enter the message you want to transmit. Terminate with a dot '.' .",
+							sm.body_);
+
+			transmitMessage(sm);
+			break;
+		}
+		case '2': // LIST
+		{
+			ListMessage lm;
+
+			readParam("Please enter the username for whom you want to request a message list.", lm.username_);
+
+			transmitMessage(lm);
+			break;
+		}
+		case '3': // READ
+		{
+			ReadMessage rm;
+
+			readParam("Please enter the receiver's username.", rm.username_);
+
+			readParam("Please enter the number of the message to display. [0 based index]", rm.message_number_);
+
+			transmitMessage(rm);
+			break;
+		}
+		case '4': // DEL
+		{
+			DelMessage dm;
+
+			readParam("Please enter the receiver's username.", dm.username_);
+
+			readParam("Please enter the number of the message to delete. [0 based index]", dm.message_number_);
+
+			transmitMessage(dm);
+			break;
+		}
+		case '5': // QUIT
+		{
+			createAndSendQuitMessage();
+
+			doQuit = true;
+			break;
+		}
+		default:
+			std::string error_text("Please choose a valid menu entry.");
+			std::cout << std::endl << "  " << error_text << std::endl;
+			throw InvalidEntryException(error_text);
+			break;
+	}
+
+	return doQuit;
+}
+
+bool Client::presentLoginMenu()
+{
+	char ctrl;
+	bool doQuit = false;
+
+	switch(ctrl = printLoginMenu())
+	{
+		case '1':
+		{
+			LoginMessage lm;
+
+			readParam("Please enter your username.", lm.username_);
+
+			readParamHidden("Please enter your password.", lm.password_);
+
+			transmitMessage(lm);
+
+			userManager_.startLogin(lm.username_);
+
+			break;
+		}
+		case '2':
+			createAndSendQuitMessage();
+			doQuit = true;
+			break;
+		default:
+			std::string error_text("Please choose a valid menu entry.");
+			std::cout << std::endl << "  " << error_text << std::endl;
+			throw InvalidEntryException(error_text);
+			break;
+	}
+
+	return doQuit;
+}
+
+char Client::printLoginMenu()
+{
+	std::vector<std::string> collection;
+
+	collection.push_back("Login Message");
+	collection.push_back("Quit Message");
+
+	return createMenuWithCollection(collection);
 }
 
 char Client::printMenu()
@@ -277,6 +357,11 @@ char Client::printMenu()
 	collection.push_back("Delete Message");
 	collection.push_back("Quit Message");
 
+	return createMenuWithCollection(collection);
+}
+
+char Client::createMenuWithCollection(const std::vector<std::string>& collection)
+{
 	std::cout << std::endl << "   === MENU ===" << std::endl << std::endl;
 
 	for(unsigned int i = 0; i < collection.size(); ++i)
@@ -290,4 +375,13 @@ char Client::printMenu()
 	std::cin >> choice;
 
 	return choice;
+}
+
+void Client::createAndSendQuitMessage()
+{
+	QuitMessage qm;
+
+	std::cout << std::endl << "  " << "You requested the server to close the connection." << std::endl;
+
+	transmitMessage(qm);
 }

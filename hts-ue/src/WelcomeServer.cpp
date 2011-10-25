@@ -159,13 +159,21 @@ void WelcomeServer::handleClient(int sd)
 
 		try
 		{
-#warning TODO: place somewhere else, half-sent messages may be lost at this point
-			// the server may be interrupted at this point
+			// the server may be interrupted only at this point
 			boost::this_thread::interruption_point();
 		}
 		catch(const boost::thread_interrupted& e)
 		{
-			break;
+			// allow the thread to finish the message it is currently working on -
+			// so that no half-sent messages may be lost in the destruction process.
+			if(ms.didFinishMessage())
+			{
+				break;
+			}
+			else
+			{
+				continue;
+			}
 		}
 	}
 
@@ -175,11 +183,8 @@ void WelcomeServer::handleClient(int sd)
 
 void WelcomeServer::shutdown()
 {
-	if(close(welcome_socket_) == -1)
-	{
-		DEBUG("Server failed to close the initial connection listener socket, because: "
-				<< strerror(errno));
-	}
+	// shut down the welcome socket
+	closeSocket(welcome_socket_);
 
 	welcome_socket_ = -1;
 

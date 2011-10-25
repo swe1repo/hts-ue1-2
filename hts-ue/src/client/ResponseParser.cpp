@@ -21,6 +21,7 @@ void ResponseParser::digest(boost::shared_ptr<std::string> data, Message::Messag
 				case Message::MessageTypeSend:
 				case Message::MessageTypeDel:
 				case Message::MessageTypeQuit:
+				case Message::MessageTypeLogin:
 					if(str == "OK")
 					{
 						boost::shared_ptr<Response> pResp(new OkResponse());

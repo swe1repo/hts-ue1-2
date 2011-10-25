@@ -26,6 +26,8 @@
 #include "../readline.h"
 #include "responses/Responses.h"
 #include "ResponseParser.h"
+#include "UserManager.h"
+#include "InvalidEntryException.h"
 
 #define DEFAULT_BUFFER_SIZE 1024
 
@@ -44,24 +46,58 @@ private:
 	ResponseParser response_parser_;
 	Message::MessageType last_type_;
 	bool end_receiving_;
+	UserManager userManager_;
 
+	// networking
 	void didReceiveResponse(int socket, boost::shared_ptr<Response> response);
 	void getResponse();
 	bool connectToServer();
+
+	// displaying
 	char printMenu();
+	char printLoginMenu();
 	void transmitMessage(const Message& msg);
+	bool presentMainMenu();
+	bool presentLoginMenu();
+
+	// utility
+	char createMenuWithCollection(const std::vector<std::string>& collection);
+	void createAndSendQuitMessage();
 
 	template <typename T>
 	void readParam(std::string question_text, T& param)
 	{
 		std::cout << std::endl << "  " << question_text << std::endl;
-		std::cin >> param;
+		std::cin  >> param;
 	}
 
-	void readStringUntil(std::string question_text, std::string& param, char delimiter)
+	template <typename T>
+	void readParamHidden(std::string question_text, T& param)
 	{
+		// use stty to hide console input
+		system("stty -echo");
+		readParam(question_text, param);
+		system("stty echo");
+
+		std::cout << std::endl;
+	}
+
+	void readStringUntil(std::string question_text, std::string& param)
+	{
+		// make sure string is cleared
+		param.clear();
+
 		std::cout << std::endl << "  " << question_text << std::endl;
-		std::getline(std::cin, param, delimiter);
+
+		std::string line;
+
+		// read until user inputs a delimiter and a newline
+		do
+		{
+			std::getline(std::cin, line);
+			param.append(line);
+		}
+		while(line != ".");
 	}
 };
 
