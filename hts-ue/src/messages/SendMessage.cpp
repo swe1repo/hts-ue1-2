@@ -34,8 +34,23 @@ void SendMessage::inflate(const std::string& data)
 	std::getline(ss, line, '\n');
 	sender_ = line;
 
-	std::getline(ss, line, '\n');
-	receiver_ = line;
+	char eot[] = EOT_STRING;
+
+	while(true)
+	{
+		std::getline(ss, line, '\n');
+
+		if(line.compare(&eot[0]) == 0)
+		{
+			// receiver list ended
+			break;
+		}
+		else
+		{
+			// add to receivers
+			receivers_.push_back(line);
+		}
+	}
 
 	std::getline(ss, line, '\n');
 	title_ = line;
@@ -57,7 +72,7 @@ void SendMessage::inflate(const std::string& data)
 	}
 
 	DEBUG("sender: " << sender_ <<
-	    ", receiver: " << receiver_ <<
+	    // ", receiver: " << receiver_ <<
 	    ", title: " << title_ <<
 	    ", body: " << body_);
 }
@@ -66,7 +81,17 @@ boost::shared_ptr<std::string> SendMessage::deflate() const
 {
 	boost::shared_ptr<std::string> deflated_string(new std::string);
 
-	*deflated_string += "SEND\n" + sender_ + "\n" + receiver_ + "\n" + title_ + "\n" + body_ + "\n.\n";
+	*deflated_string += "SEND\n" + sender_ + "\n";
+
+	foreach(std::string receiver, receivers_)
+	{
+		// don't forget re-appending the newlines
+		*deflated_string += receiver + "\n";
+	}
+
+	char eot[] = EOT_STRING;
+
+	*deflated_string += std::string(&eot[0]) + "\n"  + title_ + "\n" + body_ + ".\n";
 
 	return deflated_string;
 }

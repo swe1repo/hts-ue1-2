@@ -8,11 +8,13 @@
 #ifndef MESSAGE_H_
 #define MESSAGE_H_
 
+#include <vector>
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <boost/shared_ptr.hpp>
 #include <boost/lexical_cast.hpp>
+#include "../foreach.h"
 #include "../Logging.h"
 #include "ConversionException.h"
 

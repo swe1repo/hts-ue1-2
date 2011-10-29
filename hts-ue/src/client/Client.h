@@ -91,13 +91,21 @@ private:
 
 		std::string line;
 
-		// read until user inputs a delimiter and a newline
-		do
+		// read until user inputs a dot and a newline
+		while(true)
 		{
 			std::getline(std::cin, line);
-			param.append(line);
+
+			if(line.compare(".") == 0)
+			{
+				break;
+			}
+			else
+			{
+				// re-append newlines
+				param.append(line + "\n");
+			}
 		}
-		while(line != ".");
 	}
 };
 

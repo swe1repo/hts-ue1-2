@@ -42,7 +42,7 @@ public:
 	WelcomeServer(int port);
 	virtual ~WelcomeServer();
     void run();
-    void shutdown();
+    void shut_down();
     void setBufferSize(int bufferSize);
     void setQueueSize(int queueSize);
 
@@ -56,6 +56,7 @@ private:
     int queue_size_;
     int port_;
     boost::thread_group clients_;
+    std::vector<int> client_sockets_;
 };
 
 #endif /* WELCOMESERVER_H_ */

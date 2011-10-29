@@ -61,100 +61,108 @@ void FileManager::persistSendMessage(const SendMessage& msg)
 		throw FileManagerException("Directory has not been set yet.");
 	}
 
-	fs::path user_directory = directory_path_ / fs::path(msg.receiver_);
-
-	if( !fs::exists(user_directory) )
+	foreach(std::string receiver, msg.receivers_)
 	{
-		// user directory doesn't exist yet
-		if(mkdir(user_directory.string().c_str(), 0777) == -1)
-		{
-			DEBUG("Failed to create user specific directory at path [ "
-					<< user_directory.string() << " ].");
+		fs::path user_directory = directory_path_ / fs::path(receiver);
 
-			throw FileManagerException("Failed to create directory.");
+		// get exclusive access for the user directory - this lock is scoped
+		boost::unique_lock<boost::shared_mutex> dir_lock(directory_lock_);
+
+		if( !fs::exists(user_directory) )
+		{
+			// user directory doesn't exist yet
+			if(mkdir(user_directory.string().c_str(), 0777) == -1)
+			{
+				DEBUG("Failed to create user specific directory at path [ "
+						<< user_directory.string() << " ].");
+
+				throw FileManagerException("Failed to create directory.");
+			}
+
+			// no files yet
+			count_cache_.insert(std::pair<std::string, int>(receiver, 0));
 		}
 
-		// no files yet
-		count_cache_.insert(std::pair<std::string, int>(msg.receiver_, 0));
-	}
+		dir_lock.unlock();
 
-	if( !fs::is_directory(user_directory) )
-	{
-		throw FileManagerException("Local filesystem conflict: Cannot create user specific directory.");
-	}
-
-	if(count_cache_.find(msg.receiver_) == count_cache_.end())
-	{
-
-		// obtain shared access for reading - this is a scoped lock
-		boost::shared_lock<boost::shared_mutex> lock(file_lock_);
-
-		int count = 0;
-
-		fs::directory_iterator end;
-
-		for(fs::directory_iterator it(user_directory); it != end; it++)
+		if( !fs::is_directory(user_directory) )
 		{
-			count++;
+			throw FileManagerException("Local filesystem conflict: Cannot create user specific directory.");
 		}
 
-		DEBUG("counted files for dir [ "
-				<< user_directory.string()
-				<< " ] .. result: "
-				<< count << ".");
+		if(count_cache_.find(receiver) == count_cache_.end())
+		{
 
-		count_cache_.insert(std::pair<std::string, int>(msg.receiver_, count));
+			// obtain shared access for reading - this is a scoped lock
+			boost::shared_lock<boost::shared_mutex> lock(file_lock_);
+
+			int count = 0;
+
+			fs::directory_iterator end;
+
+			for(fs::directory_iterator it(user_directory); it != end; it++)
+			{
+				count++;
+			}
+
+			DEBUG("counted files for dir [ "
+					<< user_directory.string()
+					<< " ] .. result: "
+					<< count << ".");
+
+			count_cache_.insert(std::pair<std::string, int>(receiver, count));
+		}
+
+		std::string num_msg;
+
+		try
+		{
+			num_msg = boost::lexical_cast<std::string>(count_cache_[receiver]);
+		}
+		catch(const boost::bad_lexical_cast& e)
+		{
+			throw FileManagerException("Failed to convert to string.");
+		}
+
+		fs::path msg_file = user_directory / fs::path( num_msg ) ;
+
+		fs::ofstream of;
+
+		// get exclusive access for writing - this lock is scoped
+		boost::unique_lock<boost::shared_mutex> lock(file_lock_);
+
+		of.open( msg_file );
+
+		if( of.fail() )
+		{
+			throw FileManagerException("Failed to open file. [ " + msg_file.string() + " ]");
+		}
+
+
+		boost::shared_ptr<std::string> str;
+
+		try
+		{
+			str = msg.deflate();
+		}
+		catch(const ConversionException& e)
+		{
+			throw FileManagerException("Failed to deflate message to file. [ " + msg_file.string() + " ], " + e.what());
+		}
+
+		of.write( str->c_str(), str->size() + 1 );
+
+		if(of.fail())
+		{
+			throw FileManagerException("Failed to write to file. [ " + msg_file.string() + " ]");
+		}
+
+		DEBUG("Successfully wrote file " << msg_file.string());
+
+		of.close();
+
+		count_cache_[receiver]++;
 	}
-
-	std::string num_msg;
-
-	try
-	{
-		num_msg = boost::lexical_cast<std::string>(count_cache_[msg.receiver_]);
-	}
-	catch(const boost::bad_lexical_cast& e)
-	{
-		throw FileManagerException("Failed to convert to string.");
-	}
-
-	fs::path msg_file = user_directory / fs::path( num_msg ) ;
-
-	fs::ofstream of;
-
-	// get exclusive access for writing - this lock is scoped
-	boost::unique_lock<boost::shared_mutex> lock(file_lock_);
-
-	of.open( msg_file );
-
-	if( of.fail() )
-	{
-		throw FileManagerException("Failed to open file. [ " + msg_file.string() + " ]");
-	}
-
-
-	boost::shared_ptr<std::string> str;
-
-	try
-	{
-		str = msg.deflate();
-	}
-	catch(const ConversionException& e)
-	{
-		throw FileManagerException("Failed to deflate message to file. [ " + msg_file.string() + " ], " + e.what());
-	}
-
-	of.write( str->c_str(), str->size() + 1 );
-
-	if(of.fail())
-	{
-		throw FileManagerException("Failed to write to file. [ " + msg_file.string() + " ]");
-	}
-
-	DEBUG("Successfully wrote file " << msg_file.string());
-
-	of.close();
-
-	count_cache_[msg.receiver_]++;
 }
 
 std::vector<std::string> FileManager::getMessageList(const ListMessage& msg)
@@ -230,6 +238,7 @@ boost::shared_ptr<SendMessage> FileManager::getMessageForRead(const ReadMessage&
 		throw FileManagerException("File can't be converted/opened.");
 	}
 
+	// eclipse parser is stupid, prevents warning
 #ifdef __CDT_PARSER__
 	return boost::shared_ptr<SendMessage>();
 #endif
@@ -318,6 +327,7 @@ boost::shared_ptr<SendMessage> FileManager::messageFromFile(std::string filename
 		throw FileManagerException("Failed to convert " + filename + " to message." + e.what());
 	}
 
+	// eclipse parser is stupid, prevents warning
 #ifdef __CDT_PARSER__
 	return boost::shared_ptr<SendMessage>();
 #endif

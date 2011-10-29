@@ -45,6 +45,7 @@ private:
 	boost::filesystem::path directory_path_;
 	std::map<std::string, int> count_cache_;
 	boost::shared_mutex file_lock_;
+	boost::shared_mutex directory_lock_;
 
 	boost::shared_ptr<SendMessage> messageFromFile(std::string filename);
 };

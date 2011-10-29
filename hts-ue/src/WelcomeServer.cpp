@@ -25,7 +25,7 @@ WelcomeServer::WelcomeServer(int port) :
 
 WelcomeServer::~WelcomeServer()
 {
-	shutdown();
+	shut_down();
 }
 
 void WelcomeServer::run()
@@ -96,6 +96,7 @@ void WelcomeServer::mainLoop()
 		{
 			try
 			{
+				client_sockets_.push_back(client_socket);
 				clients_.create_thread(boost::bind(&WelcomeServer::handleClient, this, client_socket));
 			}
 			catch(NetworkException& e)
@@ -181,7 +182,7 @@ void WelcomeServer::handleClient(int sd)
 	closeSocket(sd);
 }
 
-void WelcomeServer::shutdown()
+void WelcomeServer::shut_down()
 {
 	// shut down the welcome socket
 	closeSocket(welcome_socket_);
@@ -190,5 +191,18 @@ void WelcomeServer::shutdown()
 
 	// end all running threads/clients here
 	clients_.interrupt_all();
+
+	foreach(int client, client_sockets_)
+	{
+		if(shutdown(client, SHUT_RDWR) == -1)
+		{
+			if(errno == EBADF)
+			{
+				DEBUG("Client[" << client << "] was already closed.");
+			}
+			continue;
+		}
+	}
+
 	clients_.join_all();
 }

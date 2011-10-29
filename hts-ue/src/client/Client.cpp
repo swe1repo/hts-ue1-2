@@ -155,7 +155,13 @@ void Client::didReceiveResponse(int socket, boost::shared_ptr<Response> response
 
 			std::cout << " - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
 			std::cout << "  " << "-- Sender: "   << sm.sender_   << std::endl;
-			std::cout << "  " << "-- Receiver: " << sm.receiver_ << std::endl;
+			std::cout << "  " << "-- Receivers: " << std::endl;
+
+			for(unsigned int i = 0; i < sm.receivers_.size(); ++i)
+			{
+				std::cout << "   [" << i << "] -> " << sm.receivers_[i] << std::endl;
+			}
+
 			std::cout << "  " << "-- Title: "    << sm.title_    << std::endl;
 			std::cout << " - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
 			std::cout << "  " << "-- Body: " << sm.body_ << std::endl;
@@ -242,7 +248,30 @@ bool Client::presentMainMenu()
 		{
 			SendMessage sm;
 
-			readParam("Please enter the receiver's name.", sm.receiver_);
+			char ctrl2;
+			do
+			{
+				std::string tmp;
+				readParam("Please enter the receivers' names.", tmp);
+				sm.receivers_.push_back(tmp);
+
+				while(true)
+				{
+					readParam("Do you want to enter another receiver? (y/n)", ctrl2);
+
+					if(ctrl2 != 'y' && ctrl2 != 'n')
+					{
+						// invalid control character entered
+						continue;
+					}
+					else
+					{
+						// valid control character entered
+						break;
+					}
+				}
+			}
+			while(ctrl2 == 'y');
 
 			readParam("Please enter your name.", sm.sender_);
 
