@@ -30,6 +30,7 @@ bool MailServer::didFinishMessage()
 
 void MailServer::clientConnected()
 {
+	//TODO: Create Function Call to "handleLogin();" with Login message
 }
 
 void MailServer::clientReceivedData(boost::shared_ptr<std::string> data)
