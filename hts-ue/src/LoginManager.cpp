@@ -24,6 +24,7 @@
 #define WAIT 60		//specified time to wait after 3 failed logins
 
 LoginManager::LoginManager() :
+	rc(0),
 	isLoggedIn_(false)
 {
 
@@ -36,7 +37,7 @@ void LoginManager::LockClient(LockedIP lo)
 {
 	lo.setTimestamp();		//from now on this IP is locked
 	//TODO: implement Client in order to wait a specified time until IP gets unlocked
-	lo.setIP(my_IP_);
+	lo.setIP(myIP_);
 	DEBUG("This Client is now locked!");
 }
 
@@ -148,7 +149,7 @@ void LoginManager::sendLDAPRequest(std::string username, std::string password)
 	if(validIP(lo) && validLoginCount(lo))
 	{
 		//do LDAP request
-		if( (ld = ladp_init(LDAP_HOST, LDAP_PORT)) == NULL)
+		if( (ld = ldap_init(LDAP_HOST, LDAP_PORT)) == NULL)
 		{
 			DEBUG("ldap_init failed");
 		}

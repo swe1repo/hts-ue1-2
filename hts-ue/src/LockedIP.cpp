@@ -22,7 +22,7 @@ LockedIP::LockedIP()
 
 void LockedIP::setIP(std::string str)
 {
-	ip_addr.pushback(str);
+	ip_addr.push_back(str);
 }
 
 void LockedIP::setCount(int c)

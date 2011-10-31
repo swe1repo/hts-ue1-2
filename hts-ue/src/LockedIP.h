@@ -25,7 +25,7 @@ class LockedIP
 {
 private:
 	int attemptCount;
-	static List<std::string> ip_addr;
+	static std::list<std::string> ip_addr;
 	time_t timestamp;
 
 public:
@@ -38,7 +38,6 @@ public:
 	void deleteIP(std::string ip);
 	void setTimestamp();
 	time_t getTimestamp();
-
 };
 
 #endif

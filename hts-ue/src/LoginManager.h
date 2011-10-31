@@ -37,7 +37,7 @@ public:
 	void sendLDAPRequest(std::string username, std::string password);
 
 private:
-	int rc = 0;		//for checking return value of function calls
+	int rc;		//for checking return value of function calls
 	bool isLoggedIn_;
 	std::string myIP_;
 	LDAP *ld;
