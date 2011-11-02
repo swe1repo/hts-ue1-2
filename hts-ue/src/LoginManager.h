@@ -26,24 +26,21 @@
 class LoginManager
 {
 public:
-	LoginManager();
-	bool validIP(LockedIP lo);
-	bool validLoginCount(LockedIP lo);
-	void LockClient(LockedIP lo);
-	void UnlockClient(LockedIP lo,std::string ip);
+	LoginManager(std::string client_ip);
+	bool validLoginCount();
 	bool isLoggedIn();
-	int searchUID(std::string uid);
+	int searchUID(char uid[20]);
 	bool validatePassword(int count_entries,std::string password);
-	void sendLDAPRequest(std::string username, std::string password);
+	bool sendLDAPRequest(std::string username, std::string password);
 
 private:
-	int rc;		//for checking return value of function calls
 	bool isLoggedIn_;
 	std::string myIP_;
 	LDAP *ld;
 	LDAPMessage *result, *e;
 	char *attribs[2];
 	char *dn;
+    LockedIP client_ip_;
 };
 
 #endif /* LOGINMANAGER_H_ */

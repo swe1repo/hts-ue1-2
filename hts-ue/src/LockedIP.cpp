@@ -14,54 +14,72 @@
 */
 
 #include "LockedIP.h"
+#include "Logging.h"
 
-LockedIP::LockedIP()
+std::list<std::string> LockedIP::ip_addr;
+
+LockedIP::LockedIP(std::string ip_string) :
+	attemptCount_(0),
+	ip_string_(ip_string)
 {
-	attemptCount = 0;
 }
 
-void LockedIP::setIP(std::string str)
+void LockedIP::printIP()
 {
-	ip_addr.push_back(str);
+	std::cout << "LockedIP(" << this << ") 's IP address is " << ip_string_ << std::endl;
+}
+
+bool LockedIP::isLocked()
+{
+	return attemptCount_ == 3 ? true : false;
+}
+
+void LockedIP::lock()
+{
+	setTimestamp();
+	LockedIP::ip_addr.push_back(ip_string_);
+}
+
+void LockedIP::unlock()
+{
+	auto it = LockedIP::ip_addr.begin();
+
+	for(;it != LockedIP::ip_addr.end(); ++it)
+	{
+		if(ip_string_.compare(*it) == 0)
+		{
+			ip_addr.erase(it);
+			attemptCount_ = 0;
+			return;
+		}
+	}
+
+	DEBUG("The server tried to unlock a IP address [ " <<
+		  ip_string_ <<
+		  " ] that wasnt locked.");
 }
 
 void LockedIP::setCount(int c)
 {
-	attemptCount = c;
+	attemptCount_ = c;
 }
 
 void LockedIP::incrementCount()
 {
-	attemptCount++;
+	attemptCount_++;
 }
 
 void LockedIP::setTimestamp()
 {
-	time(&timestamp);
+	time(&timestamp_);
 }
 
 int LockedIP::getCount()
 {
-	return attemptCount;
-}
-
-char LockedIP::getIP()
-{
-	return ip_addr;
+	return attemptCount_;
 }
 
 time_t LockedIP::getTimestamp()
 {
-	return timestamp;
-}
-
-void LockedIP::deleteIP(std::string ip)
-{
-	for(int i=0;i<ip_addr.size();i++)
-	{
-		if(ip.compare(ip_addr[i]) == 0)
-		{
-			ip_addr.remove(i);
-		}
-	}
+	return timestamp_;
 }

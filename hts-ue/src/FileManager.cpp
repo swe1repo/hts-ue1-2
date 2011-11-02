@@ -17,6 +17,7 @@
 #include "Logging.h"
 
 namespace fs = boost::filesystem;
+namespace ip = boost::interprocess;
 
 FileManager::FileManager()
 {
@@ -66,7 +67,9 @@ void FileManager::persistSendMessage(const SendMessage& msg)
 		fs::path user_directory = directory_path_ / fs::path(receiver);
 
 		// get exclusive access for the user directory - this lock is scoped
-		boost::unique_lock<boost::shared_mutex> dir_lock(directory_lock_);
+		ip::file_lock dir_lock(user_directory.string().c_str());
+
+		dir_lock.lock();
 
 		if( !fs::exists(user_directory) )
 		{
@@ -92,9 +95,9 @@ void FileManager::persistSendMessage(const SendMessage& msg)
 
 		if(count_cache_.find(receiver) == count_cache_.end())
 		{
-
 			// obtain shared access for reading - this is a scoped lock
-			boost::shared_lock<boost::shared_mutex> lock(file_lock_);
+			ip::file_lock f_lock(user_directory.string().c_str());
+			ip::sharable_lock<ip::file_lock> lock(f_lock);
 
 			int count = 0;
 
@@ -129,7 +132,8 @@ void FileManager::persistSendMessage(const SendMessage& msg)
 		fs::ofstream of;
 
 		// get exclusive access for writing - this lock is scoped
-		boost::unique_lock<boost::shared_mutex> lock(file_lock_);
+		ip::file_lock f_lock(msg_file.string().c_str());
+		ip::scoped_lock<ip::file_lock> lock(f_lock);
 
 		of.open( msg_file );
 
@@ -172,13 +176,6 @@ std::vector<std::string> FileManager::getMessageList(const ListMessage& msg)
 		throw FileManagerException("Directory has not been set yet.");
 	}
 
-	int init_count = 5;
-
-	if(count_cache_.find(msg.username_) != count_cache_.end())
-	{
-		init_count = count_cache_[msg.username_];
-	}
-
 	std::vector<std::string> ret;
 
 	fs::path user_directory = directory_path_ / fs::path(msg.username_);
@@ -190,9 +187,9 @@ std::vector<std::string> FileManager::getMessageList(const ListMessage& msg)
 
 	fs::directory_iterator end;
 
-
 	// obtain shared access for reading - this is a scoped lock
-	boost::shared_lock<boost::shared_mutex> lock(file_lock_);
+	ip::file_lock f_lock(user_directory.string().c_str());
+	ip::sharable_lock<ip::file_lock> lock(f_lock);
 
 	for(fs::directory_iterator it(user_directory); it != end; it++)
 	{
@@ -267,7 +264,8 @@ void FileManager::removeFile(const DelMessage& msg)
 	try
 	{
 		// get exclusive access for writing - this lock is scoped
-		boost::unique_lock<boost::shared_mutex> lock(file_lock_);
+		ip::file_lock f_lock(file_path.string().c_str());
+		ip::scoped_lock<ip::file_lock> lock(f_lock);
 
 		if(fs::remove(file_path) == false)
 		{
@@ -287,7 +285,8 @@ boost::shared_ptr<SendMessage> FileManager::messageFromFile(std::string filename
 	fs::path msg_file(filename);
 
 	// obtain shared access for reading - this is a scoped lock
-	boost::shared_lock< boost::shared_mutex > lock(file_lock_);
+	ip::file_lock f_lock(msg_file.string().c_str());
+	ip::sharable_lock<ip::file_lock> lock(f_lock);
 
 	ifs.open( msg_file );
 

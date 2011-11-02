@@ -23,63 +23,26 @@
 #define SCOPE LDAP_SCOPE_SUBTREE
 #define WAIT 60		//specified time to wait after 3 failed logins
 
-LoginManager::LoginManager() :
-	rc(0),
-	isLoggedIn_(false)
+LoginManager::LoginManager(std::string client_ip) :
+	isLoggedIn_(false),
+	client_ip_(client_ip)
 {
-
-}
-
-/*Lock Client and set timestamp in order to check
- * how long the client is going to be locked
- */
-void LoginManager::LockClient(LockedIP lo)
-{
-	lo.setTimestamp();		//from now on this IP is locked
-	//TODO: implement Client in order to wait a specified time until IP gets unlocked
-	lo.setIP(myIP_);
-	DEBUG("This Client is now locked!");
-}
-
-// currently not used
-void LoginManager::UnlockClient(LockedIP lo, std::string ip)
-{
-	lo.deleteIP(ip);
-}
-
-/*determine if the IP is on the blacklist
- *
- */
-bool LoginManager::validIP(LockedIP lo)
-{
-	myIP_ = "127.0.0.1"; 		//TODO: set Actual IP from Client
-
-	for(int i=0;i<lo.ip_addr.size();i++)
-	{
-		if(lo.ip_addr[i].compare(myIP_) == 0)
-		{
-			DEBUG("Client's IP is locked! No Permission to Connect!");
-			return false;
-		}
-	}
-	DEBUG("Client may connect");
-
-	return true;
 }
 
 /*check if client has had to many login attempts
  * return true if client may proceed to LDAP connect
  */
-bool LoginManager::validLoginCount(LockedIP lo)
+bool LoginManager::validLoginCount()
 {
-	if(lo.getCount() < 4)
+	if(client_ip_.getCount() < 3)
 	{
-		DEBUG("Client has permission to connect. Doing LDAP request...");
+		DEBUG("Client has permission to connect. Doing LDAP request ...");
 		return true;
 	}
 	else
 	{
-		LockClient();
+		DEBUG("Client doesn't have permission to connect.");
+		client_ip_.lock();
 		return false;
 	}
 }
@@ -97,16 +60,22 @@ int LoginManager::searchUID(char uid[20])
 	attribs[0] = strdup("uid");
 	attribs[1] = NULL;
 
-	if( (rc = ldap_search_s(ld,SEARCHBASE,SCOPE,uid,attribs,0,&result))
-			!= LDAP_SUCCESS)
+	int error_code;
+	if( (error_code = ldap_search_s(ld, SEARCHBASE, SCOPE, uid, attribs, 0, &result))
+	    != LDAP_SUCCESS)
 	{
-		DEBUG("LDAP search error: " << ldap_err2string(rc));
-		return EXIT_FAILURE;
+		DEBUG("LDAP search error: " << ldap_err2string(error_code));
 	}
 
 	int count_entries = 0;
 	count_entries = ldap_count_entries(ld,result);
-	DEBUG("LDAP search returned " << count_entries << "entries");
+	DEBUG("LDAP search returned " << count_entries << " entries");
+
+	if(count_entries == 0)
+	{
+		DEBUG("No entries were found.");
+		return 0;
+	}
 
 	int x = 0;
 	for(e = ldap_first_entry(ld,result);e != NULL;e = ldap_next_entry(ld,e))
@@ -127,7 +96,7 @@ bool LoginManager::validatePassword(int count_entries,std::string password)
 {
 	if(count_entries == 1)		//LDAP search should only return one user
 	{
-		if( (rc = ldap_simple_bind_s(ld,dn,password.c_str())) != LDAP_SUCCESS)
+		if( ldap_simple_bind_s(ld, dn, password.c_str()) != LDAP_SUCCESS)
 		{
 			return false;
 		}
@@ -136,30 +105,34 @@ bool LoginManager::validatePassword(int count_entries,std::string password)
 			return true;
 		}
 	}
+	else
+	{
+		DEBUG("ERROR: LDAP returned more than one user on pw query.");
+		return false;
+	}
 }
 
 /*main method of LDAP request
  * makes anonymous bind and creates uid-string for user login
  */
-void LoginManager::sendLDAPRequest(std::string username, std::string password)
+bool LoginManager::sendLDAPRequest(std::string username, std::string password)
 {
-	int rc = 0; 	//for checking return value of function calls
-	LockedIP lo = new LockedIP();
-
-	if(validIP(lo) && validLoginCount(lo))
+	if(client_ip_.isLocked() == false && validLoginCount() == true)
 	{
 		//do LDAP request
 		if( (ld = ldap_init(LDAP_HOST, LDAP_PORT)) == NULL)
 		{
 			DEBUG("ldap_init failed");
+			return false;
 		}
 		else
 		{
+			int error_code;
+
 			DEBUG("Connected to LDAP Server " << LDAP_HOST <<" on Port " << LDAP_PORT);
-			if( (rc = ldap_simple_bind_s(ld,ANONYM_USER,ANONYM_PW)) != LDAP_SUCCESS)
+			if( (error_code = ldap_simple_bind_s(ld,ANONYM_USER,ANONYM_PW)) != LDAP_SUCCESS)
 			{
-				DEBUG("LDAP Error at anonymous binding process. " <<ldap_err2string(rc));
-				return EXIT_FAILURE;
+				DEBUG("LDAP Error at anonymous binding process. " << ldap_err2string(error_code));
 			}
 			else
 			{
@@ -179,30 +152,34 @@ void LoginManager::sendLDAPRequest(std::string username, std::string password)
 			if(count_entries == 0)
 			{
 				DEBUG("User not found!");
-				lo.incrementCount();
-				//TODO: tell client that user name is incorrect
+				client_ip_.incrementCount();
+
+				return false;
 			}
 			else
 			{
 				if(validatePassword(count_entries,password))
 				{
 					DEBUG("Password is correct!");
-					lo.setCount(0);		//restore the count of attempts to log in
-					//LDAP Process finished at this point
+					client_ip_.setCount(0);		//restore the count of attempts to log in
 
+					//LDAP Process finished at this point
 					isLoggedIn_ = true;
+
+					return true;
 				}
 				else
 				{
 					DEBUG("Password is not correct!");
-					lo.incrementCount();
+					client_ip_.incrementCount();
 					isLoggedIn_ = false;
-					//TODO: tell client password is not correct
 
-
+					return false;
 				}
 			}
 			free(attribs[0]);
 		}
 	}
+
+	return false;
 }

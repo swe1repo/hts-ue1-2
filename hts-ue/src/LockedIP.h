@@ -24,20 +24,23 @@
 class LockedIP
 {
 private:
-	int attemptCount;
 	static std::list<std::string> ip_addr;
-	time_t timestamp;
 
+	int attemptCount_;
+	time_t timestamp_;
+	std::string ip_string_;
+
+	void setTimestamp();
 public:
-	LockedIP();
+	LockedIP(std::string ip_string);
+	bool isLocked();
+	void lock();
+	void unlock();
 	void incrementCount();
 	int getCount();
 	void setCount(int c);
-	void setIP(std::string str);
-	char getIP();
-	void deleteIP(std::string ip);
-	void setTimestamp();
 	time_t getTimestamp();
+	void printIP();
 };
 
 #endif

@@ -94,10 +94,16 @@ void WelcomeServer::mainLoop()
 		}
 		else
 		{
+			// convert byte ip to string ip
+			std::string client_ip(inet_ntoa(client_address_.sin_addr));
+
 			try
 			{
 				client_sockets_.push_back(client_socket);
-				clients_.create_thread(boost::bind(&WelcomeServer::handleClient, this, client_socket));
+				clients_.create_thread(boost::bind(&WelcomeServer::handleClient,
+												   this,
+												   client_socket,
+												   client_ip));
 			}
 			catch(NetworkException& e)
 			{
@@ -108,10 +114,10 @@ void WelcomeServer::mainLoop()
 	}
 }
 
-void WelcomeServer::handleClient(int sd)
+void WelcomeServer::handleClient(int sd, std::string client_ip)
 {
 	// instantiate the client-handling mailServer
-	MailServer ms(sd);
+	MailServer ms(sd, client_ip);
 
 	DEBUG("user connected with id: " << sd);
 

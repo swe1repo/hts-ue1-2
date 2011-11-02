@@ -23,10 +23,11 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
+#include <boost/interprocess/sync/file_lock.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
+#include <boost/interprocess/sync/sharable_lock.hpp>
 #include "messages/Messages.h"
 #include "Singleton.h"
 
@@ -44,8 +45,6 @@ private:
 	FileManager();
 	boost::filesystem::path directory_path_;
 	std::map<std::string, int> count_cache_;
-	boost::shared_mutex file_lock_;
-	boost::shared_mutex directory_lock_;
 
 	boost::shared_ptr<SendMessage> messageFromFile(std::string filename);
 };

@@ -16,10 +16,10 @@
 #include "MailServer.h"
 #include "Logging.h"
 
-MailServer::MailServer(int sd) :
+MailServer::MailServer(int sd, std::string client_ip) :
 	parser_(sd, this, &MailServer::messageReceived),
 	socket_id_(sd),
-	loginManager_()
+	loginManager_(client_ip)
 {
 }
 
@@ -30,7 +30,6 @@ bool MailServer::didFinishMessage()
 
 void MailServer::clientConnected()
 {
-	//TODO: Create Function Call to "handleLogin();" with Login message
 }
 
 void MailServer::clientReceivedData(boost::shared_ptr<std::string> data)
@@ -184,9 +183,15 @@ void MailServer::handleQuit(const QuitMessage& msg)
 
 void MailServer::handleLogin(const LoginMessage& msg)
 {
-	// TODO: LDAP
-	loginManager_.sendLDAPRequest(msg.username_, msg.password_);
+	bool retVal = loginManager_.sendLDAPRequest(msg.username_, msg.password_);
 
-	sendOk(socket_id_);
+	if(retVal)
+	{
+		sendOk(socket_id_);
+	}
+	else
+	{
+		sendErr(socket_id_);
+	}
 }
 
