@@ -19,15 +19,15 @@
 #include <string>
 #include <ldap.h>
 #include <list>
+#include "ClientRestrictionManager.h"
+#include "ClientInfo.h"
 #include "Logging.h"
-#include "LockedIP.h"
 
 
 class LoginManager
 {
 public:
-	LoginManager(std::string client_ip);
-	bool validLoginCount();
+	LoginManager();
 	bool isLoggedIn();
 	int searchUID(char uid[20]);
 	bool validatePassword(int count_entries,std::string password);
@@ -35,12 +35,10 @@ public:
 
 private:
 	bool isLoggedIn_;
-	std::string myIP_;
 	LDAP *ld;
 	LDAPMessage *result, *e;
 	char *attribs[2];
 	char *dn;
-    LockedIP client_ip_;
 };
 
 #endif /* LOGINMANAGER_H_ */

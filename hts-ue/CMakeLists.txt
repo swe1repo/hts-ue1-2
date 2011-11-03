@@ -2,7 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 PROJECT(HTS-UE1 CXX)
 
-ADD_DEFINITIONS(Server -O0 -Werror -Wall -std=c++0x)
+ADD_DEFINITIONS(-O0 -Werror -Wall -std=c++0x)
 
 FILE(GLOB SERVER_SOURCES "src/*")
 FILE(GLOB MSG_SOURCES "src/messages/*")

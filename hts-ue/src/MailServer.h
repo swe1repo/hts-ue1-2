@@ -26,7 +26,7 @@
 class MailServer : public Server
 {
 public:
-	MailServer(int sd, std::string client_ip);
+	MailServer(int sd);
 
 protected:
     // ServerBase Methods

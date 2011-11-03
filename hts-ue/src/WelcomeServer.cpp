@@ -14,6 +14,7 @@
 */
 
 #include "WelcomeServer.h"
+#include "ClientRestrictionManager.h"
 
 WelcomeServer::WelcomeServer(int port) :
 	welcome_socket_(-1),
@@ -94,16 +95,13 @@ void WelcomeServer::mainLoop()
 		}
 		else
 		{
-			// convert byte ip to string ip
-			std::string client_ip(inet_ntoa(client_address_.sin_addr));
-
 			try
 			{
 				client_sockets_.push_back(client_socket);
 				clients_.create_thread(boost::bind(&WelcomeServer::handleClient,
 												   this,
 												   client_socket,
-												   client_ip));
+												   client_address_));
 			}
 			catch(NetworkException& e)
 			{
@@ -114,10 +112,15 @@ void WelcomeServer::mainLoop()
 	}
 }
 
-void WelcomeServer::handleClient(int sd, std::string client_ip)
+void WelcomeServer::handleClient(int sd, struct sockaddr_in client_info)
 {
 	// instantiate the client-handling mailServer
-	MailServer ms(sd, client_ip);
+	MailServer ms(sd);
+
+	ClientInfo ci(client_info);
+
+	// register new client with restrictionManager
+	ClientRestrictionManager::getInstance()->addClient(&ci);
 
 	DEBUG("user connected with id: " << sd);
 

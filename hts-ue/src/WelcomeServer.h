@@ -48,7 +48,7 @@ public:
 
 protected:
     void mainLoop();
-    void handleClient(int socket, std::string client_ip);
+    void handleClient(int socket, struct sockaddr_in client_info);
 
 private:
     int welcome_socket_;

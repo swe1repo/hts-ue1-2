@@ -16,10 +16,10 @@
 #include "MailServer.h"
 #include "Logging.h"
 
-MailServer::MailServer(int sd, std::string client_ip) :
+MailServer::MailServer(int sd) :
 	parser_(sd, this, &MailServer::messageReceived),
 	socket_id_(sd),
-	loginManager_(client_ip)
+	loginManager_()
 {
 }
 

@@ -24,6 +24,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "NetworkException.h"
+#include "ClientInfo.h"
 
 class Server
 {

@@ -23,28 +23,9 @@
 #define SCOPE LDAP_SCOPE_SUBTREE
 #define WAIT 60		//specified time to wait after 3 failed logins
 
-LoginManager::LoginManager(std::string client_ip) :
-	isLoggedIn_(false),
-	client_ip_(client_ip)
+LoginManager::LoginManager() :
+	isLoggedIn_(false)
 {
-}
-
-/*check if client has had to many login attempts
- * return true if client may proceed to LDAP connect
- */
-bool LoginManager::validLoginCount()
-{
-	if(client_ip_.getCount() < 3)
-	{
-		DEBUG("Client has permission to connect. Doing LDAP request ...");
-		return true;
-	}
-	else
-	{
-		DEBUG("Client doesn't have permission to connect.");
-		client_ip_.lock();
-		return false;
-	}
 }
 
 bool LoginManager::isLoggedIn()
@@ -117,7 +98,9 @@ bool LoginManager::validatePassword(int count_entries,std::string password)
  */
 bool LoginManager::sendLDAPRequest(std::string username, std::string password)
 {
-	if(client_ip_.isLocked() == false && validLoginCount() == true)
+	ClientInfo* current_client = ClientRestrictionManager::getInstance()->getCurrentClient();
+
+	if(current_client->isLocked() == false)
 	{
 		//do LDAP request
 		if( (ld = ldap_init(LDAP_HOST, LDAP_PORT)) == NULL)
@@ -152,7 +135,7 @@ bool LoginManager::sendLDAPRequest(std::string username, std::string password)
 			if(count_entries == 0)
 			{
 				DEBUG("User not found!");
-				client_ip_.incrementCount();
+				current_client->loginFailed();
 
 				return false;
 			}
@@ -161,7 +144,7 @@ bool LoginManager::sendLDAPRequest(std::string username, std::string password)
 				if(validatePassword(count_entries,password))
 				{
 					DEBUG("Password is correct!");
-					client_ip_.setCount(0);		//restore the count of attempts to log in
+					current_client->loginSucceeded();
 
 					//LDAP Process finished at this point
 					isLoggedIn_ = true;
@@ -171,7 +154,7 @@ bool LoginManager::sendLDAPRequest(std::string username, std::string password)
 				else
 				{
 					DEBUG("Password is not correct!");
-					client_ip_.incrementCount();
+					current_client->loginFailed();
 					isLoggedIn_ = false;
 
 					return false;
