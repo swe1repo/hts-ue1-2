@@ -24,8 +24,11 @@ void Server::closeSocket(int sd)
 {
 	if(close(sd) == -1)
 	{
-		DEBUG("Server failed to close client[" << sd << "], because: "
-				<< strerror(errno));
+		if(errno != EBADF)
+		{
+			DEBUG("Server failed to close client[" << sd << "], because: "
+				  << strerror(errno));
+		}
 	}
 }
 

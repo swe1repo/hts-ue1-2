@@ -48,6 +48,8 @@ int LoginManager::searchUID(char uid[20])
 		DEBUG("LDAP search error: " << ldap_err2string(error_code));
 	}
 
+	free(attribs[0]);
+
 	int count_entries = 0;
 	count_entries = ldap_count_entries(ld,result);
 	DEBUG("LDAP search returned " << count_entries << " entries");
@@ -100,6 +102,22 @@ bool LoginManager::sendLDAPRequest(std::string username, std::string password)
 {
 	ClientInfo* current_client = ClientRestrictionManager::getInstance()->getCurrentClient();
 
+#ifdef NO_LDAP
+	if(current_client->isLocked() == false)
+	{
+		if(username.compare("asdf") == 0 && password.compare("1234") == 0)
+			return true;
+		else
+		{
+			current_client->loginFailed();
+			return false;
+		}
+	}
+	else
+	{
+		return false;
+	}
+#else
 	if(current_client->isLocked() == false)
 	{
 		//do LDAP request
@@ -160,11 +178,7 @@ bool LoginManager::sendLDAPRequest(std::string username, std::string password)
 					return false;
 				}
 			}
-
-			// TODO: Move this somewhere it actually has an effect
-			free(attribs[0]);
 		}
 	}
-
-	return false;
+#endif
 }

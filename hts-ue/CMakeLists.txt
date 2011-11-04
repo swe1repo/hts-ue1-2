@@ -15,7 +15,7 @@ ADD_EXECUTABLE(Client ${CLIENT_SOURCES} ${MSG_SOURCES} ${RSP_SOURCES}
 		       src/Logging.h src/MessageParser.h src/MessageParser.cpp 
 		       src/NetworkException.h src/readline.h src/readline.cpp)
 
-SET_TARGET_PROPERTIES(Server PROPERTIES COMPILE_FLAGS "-DVERBOSE -DLDAP_DEPRECATED")
+SET_TARGET_PROPERTIES(Server PROPERTIES COMPILE_FLAGS "-DVERBOSE -DLDAP_DEPRECATED -DNO_LDAP")
 
 TARGET_LINK_LIBRARIES(Server boost_filesystem ldap boost_thread)
 

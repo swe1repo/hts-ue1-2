@@ -7,6 +7,7 @@
 
 #include "ClientInfo.h"
 #include "ClientRestrictionManager.h"
+#include "Logging.h"
 
 ClientInfo::ClientInfo(int socket_descriptor, struct sockaddr_in client_address) :
 	socket_descriptor_(socket_descriptor),
@@ -23,6 +24,11 @@ std::string ClientInfo::getIPAddressString() const
 void ClientInfo::loginFailed()
 {
 	attemptCount_++;
+
+	if(attemptCount_ >= 3)
+	{
+		lock();
+	}
 }
 
 void ClientInfo::loginSucceeded()

@@ -31,9 +31,10 @@ bool MailServer::didFinishMessage()
 void MailServer::clientConnected()
 {
 	ClientInfo* current_client = ClientRestrictionManager::getInstance()->getCurrentClient();
+
 	if( current_client->isLocked() )
 	{
-		closeSocket(current_client->getSocketDescriptor() );
+		closeSocket( current_client->getSocketDescriptor() );
 	}
 }
 
@@ -196,7 +197,16 @@ void MailServer::handleLogin(const LoginMessage& msg)
 	}
 	else
 	{
-		sendErr(socket_id_);
+		ClientInfo* ci = ClientRestrictionManager::getInstance()->getCurrentClient();
+
+		if( ci->isLocked() )
+		{
+			closeSocket(socket_id_);
+		}
+		else
+		{
+			sendErr(socket_id_);
+		}
 	}
 }
 
