@@ -48,7 +48,7 @@ public:
 
 protected:
     void mainLoop();
-    void handleClient(int socket, struct sockaddr_in client_info);
+    void handleClient(ClientInfo* client_info);
 
 private:
     int welcome_socket_;

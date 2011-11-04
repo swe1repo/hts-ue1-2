@@ -30,6 +30,11 @@ bool MailServer::didFinishMessage()
 
 void MailServer::clientConnected()
 {
+	ClientInfo* current_client = ClientRestrictionManager::getInstance()->getCurrentClient();
+	if( current_client->isLocked() )
+	{
+		closeSocket(current_client->getSocketDescriptor() );
+	}
 }
 
 void MailServer::clientReceivedData(boost::shared_ptr<std::string> data)

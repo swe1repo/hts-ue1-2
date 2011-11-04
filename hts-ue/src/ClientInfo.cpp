@@ -8,7 +8,8 @@
 #include "ClientInfo.h"
 #include "ClientRestrictionManager.h"
 
-ClientInfo::ClientInfo(struct sockaddr_in client_address) :
+ClientInfo::ClientInfo(int socket_descriptor, struct sockaddr_in client_address) :
+	socket_descriptor_(socket_descriptor),
 	client_address_(client_address),
 	attemptCount_(0)
 {
@@ -21,45 +22,27 @@ std::string ClientInfo::getIPAddressString() const
 
 void ClientInfo::loginFailed()
 {
-	boost::mutex::scoped_lock lock(client_mutex_);
-
 	attemptCount_++;
 }
 
 void ClientInfo::loginSucceeded()
 {
-	boost::mutex::scoped_lock lock(client_mutex_);
-
 	attemptCount_ = 0;
 }
 
 void ClientInfo::lock()
 {
-	boost::mutex::scoped_lock lock(client_mutex_);
-
-	timestamp_ = time(0);
-	attemptCount_ = 3;
-}
-
-void ClientInfo::unlock()
-{
-	boost::mutex::scoped_lock lock(client_mutex_);
-
-	attemptCount_ = 0;
+	ClientRestrictionManager::getInstance()->lock(getIPAddressString());
 }
 
 bool ClientInfo::isLocked()
 {
-	boost::mutex::scoped_lock lock(client_mutex_);
-
-	return attemptCount_ < 3 ? false : true;
+	return ClientRestrictionManager::getInstance()->isLocked(getIPAddressString());
 }
 
-time_t ClientInfo::getTimestamp()
+int ClientInfo::getSocketDescriptor()
 {
-	boost::mutex::scoped_lock lock(client_mutex_);
-
-	return timestamp_;
+	return socket_descriptor_;
 }
 
 bool ClientInfo::operator==(const ClientInfo& rh)

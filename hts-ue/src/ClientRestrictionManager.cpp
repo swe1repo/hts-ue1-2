@@ -10,21 +10,29 @@
 ClientRestrictionManager::ClientRestrictionManager() :
 	lockout_time_((time_t)60) // default lockout_time_ is 60 seconds
 {
-	// TODO: Load Persistence File
+	// TODO: Load Persistance File
+}
+
+ClientRestrictionManager::~ClientRestrictionManager()
+{
+	// TODO: Save Persistance File
 }
 
 void ClientRestrictionManager::update(time_t deltaT)
 {
-	boost::mutex::scoped_lock lock(clients_mutex_);
+	boost::upgrade_lock<boost::shared_mutex> lock(clients_mutex_);
 
-	auto it = clients_.begin();
+	auto it = locked_clients_.begin();
 
-	for(; it != clients_.end(); it++)
+	for(; it != locked_clients_.end(); it++)
 	{
 		// lockout time is over
-		if( time(0) - (*it)->getTimestamp() > lockout_time_)
+		if( time(0) - it->second > lockout_time_)
 		{
-			(*it)->unlock();
+			boost::unique_lock<boost::shared_mutex> u_lock(clients_mutex_);
+
+			// remove the client ip from locked list
+			locked_clients_.erase(it);
 		}
 	}
 }
@@ -34,47 +42,29 @@ void ClientRestrictionManager::setLockoutTime(time_t lockout_time)
 	lockout_time_ = lockout_time;
 }
 
-void ClientRestrictionManager::addClient(ClientInfo* client)
+void ClientRestrictionManager::lock(std::string client_ip)
 {
-	boost::mutex::scoped_lock lock(clients_mutex_);
+	boost::unique_lock<boost::shared_mutex> lock(clients_mutex_);
 
-	clients_.push_back(client);
-	current_client_.reset(client);
+	locked_clients_.insert(std::pair<std::string, time_t>(client_ip, time(0)));
 }
 
-void ClientRestrictionManager::removeClient(ClientInfo* client)
+bool ClientRestrictionManager::isLocked(std::string client_ip)
 {
-	boost::mutex::scoped_lock lock(clients_mutex_);
+	boost::shared_lock<boost::shared_mutex> lock(clients_mutex_);
 
-	auto it = clients_.begin();
+	auto it = locked_clients_.begin();
 
-	for(; it != clients_.end(); it++)
+	for(; it != locked_clients_.end(); it++)
 	{
-		// client to remove has been found
-		if( *client == *(*it))
+		// lockout time is over
+		if( client_ip.compare(it->first) == 0)
 		{
-			clients_.erase(it);
-			current_client_.release();
-			return;
+			return true;
 		}
 	}
-}
 
-void ClientRestrictionManager::lock(ClientInfo* client)
-{
-	boost::mutex::scoped_lock lock(clients_mutex_);
-
-	auto it = clients_.begin();
-
-	for(; it != clients_.end(); it++)
-	{
-		// client to lock has been found
-		if( *client == *(*it))
-		{
-			(*it)->lock();
-			return;
-		}
-	}
+	return false;
 }
 
 ClientInfo* ClientRestrictionManager::getCurrentClient()
@@ -82,7 +72,7 @@ ClientInfo* ClientRestrictionManager::getCurrentClient()
 	return current_client_.get();
 }
 
-void ClientRestrictionManager::removeCurrentClient()
+void ClientRestrictionManager::setCurrentClient(ClientInfo* ci)
 {
-	removeClient(current_client_.get());
+	current_client_.reset(ci);
 }

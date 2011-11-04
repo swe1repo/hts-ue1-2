@@ -160,6 +160,8 @@ bool LoginManager::sendLDAPRequest(std::string username, std::string password)
 					return false;
 				}
 			}
+
+			// TODO: Move this somewhere it actually has an effect
 			free(attribs[0]);
 		}
 	}

@@ -22,6 +22,8 @@ WelcomeServer::WelcomeServer(int port) :
 	queue_size_(-1),
 	port_(port)
 {
+	// set lockout time to half an hour
+	ClientRestrictionManager::getInstance()->setLockoutTime((time_t) 60*30);
 }
 
 WelcomeServer::~WelcomeServer()
@@ -83,9 +85,20 @@ void WelcomeServer::mainLoop()
 
 	DEBUG("Listening on port: " << port_);
 
+	// initialize timer
+	time_t last_update = time(0);
+
 	while(true)
 	{
 		int client_socket = accept( welcome_socket_, (struct sockaddr*)&client_address_, &address_length);
+
+		// create new clientInfo instance - is going to be passed to thread specific pointer
+		// thus it is automatically deleted on thread-exit.
+		ClientInfo* ci = new ClientInfo(client_socket, client_address_);
+
+		// update timer
+		ClientRestrictionManager::getInstance()->update( time(0) - last_update );
+		last_update = time(0);
 
 		if( client_socket == -1 )
 		{
@@ -100,8 +113,7 @@ void WelcomeServer::mainLoop()
 				client_sockets_.push_back(client_socket);
 				clients_.create_thread(boost::bind(&WelcomeServer::handleClient,
 												   this,
-												   client_socket,
-												   client_address_));
+												   ci));
 			}
 			catch(NetworkException& e)
 			{
@@ -112,17 +124,17 @@ void WelcomeServer::mainLoop()
 	}
 }
 
-void WelcomeServer::handleClient(int sd, struct sockaddr_in client_info)
+void WelcomeServer::handleClient(ClientInfo* client_info)
 {
+	int sd = client_info->getSocketDescriptor();
+
+	// set this threads handled client
+	ClientRestrictionManager::getInstance()->setCurrentClient(client_info);
+
 	// instantiate the client-handling mailServer
-	MailServer ms(sd);
+	MailServer ms( sd );
 
-	ClientInfo ci(client_info);
-
-	// register new client with restrictionManager
-	ClientRestrictionManager::getInstance()->addClient(&ci);
-
-	DEBUG("user connected with id: " << sd);
+	DEBUG("user connected with id: " << client_info->getSocketDescriptor());
 
 	int buffer_len = buffer_size_ == -1 ? DEFAULT_BUFFER_SIZE : buffer_size_;
 	std::vector<char> buffer(buffer_len);
@@ -188,7 +200,7 @@ void WelcomeServer::handleClient(int sd, struct sockaddr_in client_info)
 	}
 
 	// execution finished, for whatever reason -> close the clients socket
-	closeSocket(sd);
+	closeSocket( client_info->getSocketDescriptor() );
 }
 
 void WelcomeServer::shut_down()
@@ -209,7 +221,6 @@ void WelcomeServer::shut_down()
 			{
 				DEBUG("Client[" << client << "] was already closed.");
 			}
-			continue;
 		}
 	}
 

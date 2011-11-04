@@ -16,22 +16,21 @@
 class ClientInfo
 {
 public:
-	ClientInfo(struct sockaddr_in client_address);
+	ClientInfo(int socket_descriptor, struct sockaddr_in client_address);
 
 	std::string getIPAddressString() const;
 	void loginFailed();
 	void loginSucceeded();
 	void lock();
-	void unlock();
 	bool isLocked();
-	time_t getTimestamp();
+	int getSocketDescriptor();
 
 	bool operator==(const ClientInfo& rh);
 private:
+	int socket_descriptor_;
 	struct sockaddr_in client_address_;
 	int attemptCount_;
 	time_t timestamp_;
-	boost::mutex client_mutex_;
 
 	ClientInfo(const ClientInfo&);
 };
