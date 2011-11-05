@@ -70,6 +70,40 @@ void SendMessage::inflate(const std::string& data)
 			body_.append(line + "\n");
 		}
 	}
+/*
+	std::getline(ss, line, '\n');
+
+	try
+	{
+		attachments_.reserve( boost::lexical_cast<int>(line) );
+	}
+	catch(const boost::bad_lexical_cast& e)
+	{
+		std::string error_text = "Inflation failed, because the supplied message data is not of the proper type.";
+		DEBUG(error_text);
+
+		throw ConversionException(error_text);
+	}
+
+	foreach(Attachment attachment, attachments_)
+	{
+		std::getline(ss, line, '\n');
+
+		try
+		{
+			attachment.data_.reserve( boost::lexical_cast<int>(line) );
+		}
+		catch(const boost::bad_lexical_cast& e)
+		{
+			std::string error_text = "Inflation failed, because the supplied message data is not of the proper type.";
+			DEBUG(error_text);
+
+			throw ConversionException(error_text);
+		}
+
+
+		ss.read( &attachment.data_[0], attachment.data_.size() );
+	} */
 
 	DEBUG("sender: " << sender_ <<
 	    // ", receiver: " << receiver_ <<
@@ -92,6 +126,24 @@ boost::shared_ptr<std::string> SendMessage::deflate() const
 	char eot[] = EOT_STRING;
 
 	*deflated_string += std::string(&eot[0]) + "\n"  + title_ + "\n" + body_ + ".\n";
+/*
+	try
+	{
+		*deflated_string += boost::lexical_cast<std::string>( attachments_.size() ) + "\n";
+
+		foreach(Attachment attachment, attachments_)
+		{
+			*deflated_string += boost::lexical_cast<std::string>( attachment.data_.size() ) + "\n";
+			*deflated_string += std::string( &attachment.data_[0] );
+		}
+	}
+	catch(boost::bad_lexical_cast& e)
+	{
+		std::string error_text = "Deflation failed, because the supplied message data is not of the proper format.";
+
+		DEBUG(error_text);
+		throw ConversionException(error_text);
+	} */
 
 	return deflated_string;
 }

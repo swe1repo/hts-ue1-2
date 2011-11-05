@@ -52,23 +52,91 @@ void ThreadedFileManager::persistSendMessage(const SendMessage& msg)
 {
 	foreach(std::string receiver, msg.receivers_)
 	{
-		auto msg_path = accessMessageDirectory(receiver, getRandomMessageId());
+		std::string msg_id = MessageIdGenerator::getInstance()->getUniqueMessageId();
+
+		auto usr_path = accessUserDirectory(receiver);
+
+		writeMessageToFile( usr_path / fs::path( msg_id ), msg );
 	}
 }
 
+// walks the directory specified by __msg__ and creates a list of its content msgs' titles
 std::vector<std::string> ThreadedFileManager::getMessageList(const ListMessage& msg)
 {
-	return std::vector<std::string>();
+	std::vector<std::string> retVal;
+
+	fs::path usr_path = directory_path_ / fs::path(msg.username_);
+
+	fs::directory_iterator end;
+
+	for(fs::directory_iterator it(usr_path); it != end; it++)
+	{
+		fs::path msg_file = it->path();
+
+		if( fs::is_regular_file(msg_file) )
+		{
+			auto pMsg = messageFromFile(msg_file.string());
+
+			retVal.push_back( pMsg->title_ );
+		}
+	}
+
+	return retVal;
 }
 
 boost::shared_ptr<SendMessage> ThreadedFileManager::getMessageForRead(const ReadMessage& msg)
 {
-	return boost::shared_ptr<SendMessage>();
+	fs::path path = getMessageAtIndex(msg.username_, msg.message_number_);
+
+	if(path.empty())
+	{
+		throw FileManagerException("File at specified index [" + boost::lexical_cast<std::string>(msg.message_number_) + "] \
+	                    			for path " + path.string() + " doesn't exist.");
+	}
+	else
+	{
+		return messageFromFile( path.string() );
+	}
 }
 
 void ThreadedFileManager::removeFile(const DelMessage& msg)
 {
+	fs::path file_path = getMessageAtIndex(msg.username_, msg.message_number_);
 
+	try
+	{
+		if(fs::remove(file_path) == false)
+		{
+			throw FileManagerException("Failed to remove file at "+ file_path.string() + ", because file does not exist.");
+		}
+	}
+	catch(const fs::filesystem_error& e)
+	{
+		throw FileManagerException("Failed to remove file at "+ file_path.string() + ", because " + e.what());
+	}
+}
+
+fs::path ThreadedFileManager::getMessageAtIndex(std::string username, int index)
+{
+	fs::path usr_path = directory_path_ / fs::path(username);
+
+	fs::directory_iterator end;
+	fs::directory_iterator it(usr_path);
+
+	for(int i = 0; it != end; i++, it++)
+	{
+		if( i == index )
+		{
+			fs::path msg_file = it->path();
+
+			if( fs::is_regular_file(msg_file) )
+			{
+				return msg_file;
+			}
+		}
+	}
+
+	return fs::path();
 }
 
 fs::path ThreadedFileManager::accessUserDirectory(std::string username)
@@ -76,13 +144,9 @@ fs::path ThreadedFileManager::accessUserDirectory(std::string username)
 	return accessDirectory( directory_path_ / fs::path(username) );
 }
 
-fs::path ThreadedFileManager::accessMessageDirectory(std::string username, std::string message_id)
-{
-	return accessDirectory( accessDirectory(username) + fs::path(message_id) );
-}
-
 fs::path ThreadedFileManager::accessDirectory(fs::path path)
 {
+	// create directory if it doesn't exist yet
 	if( !fs::exists(path) )
 	{
 		createDirectory(path);
@@ -93,39 +157,98 @@ fs::path ThreadedFileManager::accessDirectory(fs::path path)
 
 void ThreadedFileManager::createDirectory(fs::path path)
 {
-	if(mkdir(path.string().c_str(), 0777) == -1)
+	if( mkdir(path.string().c_str(), 0777) == -1 )
 	{
 		throw FileManagerException("Failed to create directory at path " + path.string() + ".");
 	}
 }
 
-std::string ThreadedFileManager::getRandomMessageId()
+// serializes a message __msg__ to file at path __msg_file__
+void ThreadedFileManager::writeMessageToFile(fs::path msg_file, const Message& msg)
 {
-#define FILENAME_LEN 15
+	fs::ofstream of;
 
-	// seed nrand with previous value
-	static unsigned short init[3];
-	long int* pInit = reinterpret_cast<long int>(&init[0]);
+	of.open( msg_file );
 
-	std::string retVal( FILENAME_LEN );
-	std::vector<long int> randVal( FILENAME_LEN );
-
-	for(int i = 0; i < FILENAME_LEN; ++i)
+	if( of.fail() )
 	{
-		randVal.push_back( *pInit = nrand48( init ) );
+		throw FileManagerException("Failed to open file. [ " + msg_file.string() + " ]");
 	}
 
-	int size = sizeof(long int) * FILENAME_LEN;
-	char buf[ size ];
+	boost::shared_ptr<std::string> str;
 
-	foreach(long int val, randVal)
+	try
 	{
-		snprintf(buf, size, "%x", val);
+		str = msg.deflate();
 	}
-/*
-	if( retVal.compare() == 0 )
+	catch(const ConversionException& e)
 	{
-		throw FileManagerException("Failed to create another random messageId")
+		throw FileManagerException("Failed to deflate message to file. [ " + msg_file.string() + " ], " + e.what());
 	}
-*/
+
+	of.write( str->c_str(), str->size() + 1 );
+
+	if(of.fail())
+	{
+		throw FileManagerException("Failed to write to file. [ " + msg_file.string() + " ]");
+	}
+
+	DEBUG("Successfully wrote file " << msg_file.string());
+
+	of.close();
+}
+
+// deserializes a message from path __filename__
+boost::shared_ptr<SendMessage> ThreadedFileManager::messageFromFile(std::string filename)
+{
+	fs::ifstream ifs;
+
+	fs::path msg_file(filename);
+
+	// obtain shared access for reading - this is a scoped lock
+	ip::file_lock f_lock(msg_file.string().c_str());
+	ip::sharable_lock<ip::file_lock> lock(f_lock);
+
+	ifs.open( msg_file );
+
+	if( ifs.fail() )
+	{
+		throw FileManagerException("Failed to open file. [ " + msg_file.string() + " ]");
+	}
+
+	ifs.seekg(0, std::ios::end);
+
+	int len = ifs.tellg();
+
+	ifs.seekg(0, std::ios::beg);
+
+	if(len == -1 || ifs.fail())
+	{
+		throw FileManagerException("Failed to get file size. [ " + msg_file.string() + " ]");
+	}
+
+	std::vector<char> buffer(len);
+
+	ifs.read(&buffer[0], len);
+
+	if(ifs.fail())
+	{
+		throw FileManagerException("Failed to read file content. [ " + msg_file.string() + " ]");
+	}
+
+	ifs.close();
+
+	try
+	{
+		return boost::shared_ptr<SendMessage>(new SendMessage(std::string(buffer.begin(), buffer.end())));
+	}
+	catch(const ConversionException& e)
+	{
+		throw FileManagerException("Failed to convert " + filename + " to message." + e.what());
+	}
+
+	// eclipse parser is stupid, prevents warning
+#ifdef __CDT_PARSER__
+	return boost::shared_ptr<SendMessage>();
+#endif
 }

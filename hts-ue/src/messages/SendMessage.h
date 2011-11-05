@@ -9,6 +9,7 @@
 #define SENDMESSAGE_H_
 
 #include "Message.h"
+#include "Attachment.h"
 
 // END OF TEXT CONSTANT
 // used to determine the end of receivers list
@@ -28,6 +29,8 @@ public:
 	std::vector<std::string> receivers_;
 	std::string title_;
 	std::string body_;
+
+	std::vector<Attachment> attachments_;
 };
 
 #endif /* SENDMESSAGE_H_ */

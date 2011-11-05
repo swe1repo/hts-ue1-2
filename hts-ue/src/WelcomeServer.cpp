@@ -134,7 +134,7 @@ void WelcomeServer::handleClient(ClientInfo* client_info)
 	// instantiate the client-handling mailServer
 	MailServer ms( sd );
 
-	ms.setAbstractFileManager(FileManager::getInstance());
+	ms.setAbstractFileManager(ThreadedFileManager::getInstance());
 
 	DEBUG("user connected with id: " << client_info->getSocketDescriptor());
 

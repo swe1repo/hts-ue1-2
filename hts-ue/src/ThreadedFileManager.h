@@ -13,7 +13,9 @@
 #include <sys/types.h>
 #include <cstdlib>
 #include <cstdio>
+#include <ctime>
 #include <vector>
+#include <string>
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
@@ -24,8 +26,9 @@
 #include "AbstractFileManager.h"
 #include "Singleton.h"
 #include "FileLockDelegate.h"
+#include "MessageIdGenerator.h"
 
-class ThreadedFileManager : public AbstractFileManager, Singleton<ThreadedFileManager>
+class ThreadedFileManager : public AbstractFileManager, public Singleton<ThreadedFileManager>
 {
 public:
 	// AbstractFileManager base
@@ -34,16 +37,22 @@ public:
 	virtual std::vector<std::string> getMessageList(const ListMessage& msg);
 	virtual boost::shared_ptr<SendMessage> getMessageForRead(const ReadMessage& msg);
 	virtual void removeFile(const DelMessage& msg);
+	std::string getRandomMessageId();
 private:
 	FileLockDelegate lockDelegate_;
 	boost::filesystem::path directory_path_;
 
 	ThreadedFileManager();
+
+	// filesystem handling
 	boost::filesystem::path accessUserDirectory(std::string username);
-	boost::filesystem::path accessMessageDirectory(std::string username, std::string message_id);
-	boost::filesystem::path accessDirectory(fs::path path);
-	void createDirectory(fs::path path);
-	std::string getRandomMessageId();
+	boost::filesystem::path accessDirectory(boost::filesystem::path path);
+	void createDirectory(boost::filesystem::path path);
+
+	// utility
+	void writeMessageToFile(boost::filesystem::path msg_file, const Message& msg);
+	boost::shared_ptr<SendMessage> messageFromFile(std::string filename);
+	boost::filesystem::path getMessageAtIndex(std::string username, int index);
 
 	friend class Singleton<ThreadedFileManager>;
 };

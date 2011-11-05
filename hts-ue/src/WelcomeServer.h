@@ -30,7 +30,7 @@
 #include "foreach.h"
 #include "Logging.h"
 #include "MailServer.h"
-#include "FileManager.h"
+#include "ThreadedFileManager.h"
 #include "NetworkException.h"
 
 #define DEFAULT_BUFFER_SIZE 1024

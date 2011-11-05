@@ -20,8 +20,8 @@
 #include <iostream>
 #include <boost/lexical_cast.hpp>
 #include "WelcomeServer.h"
-#include "FileManager.h"
 #include "Logging.h"
+#include "ThreadedFileManager.h"
 
 static WelcomeServer* ws = 0;
 
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
 		DEBUG("Error when registering signal handler, catching an inexistant signal will not work.");
 	}
 
-	FileManager::getInstance()->setDirectoryPath(directory_path);
+	ThreadedFileManager::getInstance()->setDirectoryPath(directory_path);
 
 	ws = new WelcomeServer(port);
 
