@@ -19,8 +19,8 @@
 #include <sys/stat.h>
 #include <map>
 #include "Server.h"
-#include "FileManager.h"
 #include "MessageParser.h"
+#include "AbstractFileManager.h"
 #include "LoginManager.h"
 
 class MailServer : public Server
@@ -28,6 +28,8 @@ class MailServer : public Server
 public:
 	MailServer(int sd);
 
+	// has to be called prior to usage
+	void setAbstractFileManager(AbstractFileManager* instance);
 protected:
     // ServerBase Methods
     void clientConnected();
@@ -37,6 +39,7 @@ protected:
 
     bool didFinishMessage();
 private:
+    AbstractFileManager* fileManager_;
     MessageParser parser_;
     int socket_id_;
     LoginManager loginManager_;

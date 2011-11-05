@@ -134,6 +134,8 @@ void WelcomeServer::handleClient(ClientInfo* client_info)
 	// instantiate the client-handling mailServer
 	MailServer ms( sd );
 
+	ms.setAbstractFileManager(FileManager::getInstance());
+
 	DEBUG("user connected with id: " << client_info->getSocketDescriptor());
 
 	int buffer_len = buffer_size_ == -1 ? DEFAULT_BUFFER_SIZE : buffer_size_;

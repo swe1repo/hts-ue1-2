@@ -19,7 +19,8 @@
 namespace fs = boost::filesystem;
 namespace ip = boost::interprocess;
 
-FileManager::FileManager()
+FileManager::FileManager() :
+	AbstractFileManager()
 {
 }
 

@@ -17,10 +17,16 @@
 #include "Logging.h"
 
 MailServer::MailServer(int sd) :
+	fileManager_(0),
 	parser_(sd, this, &MailServer::messageReceived),
 	socket_id_(sd),
 	loginManager_()
 {
+}
+
+void MailServer::setAbstractFileManager(AbstractFileManager* instance)
+{
+	fileManager_ = instance;
 }
 
 bool MailServer::didFinishMessage()
@@ -98,7 +104,7 @@ void MailServer::handleSend(const SendMessage& msg)
 	{
 		try
 		{
-			FileManager::getInstance()->persistSendMessage(msg);
+			fileManager_->persistSendMessage(msg);
 			sendOk(socket_id_);
 		}
 		catch(const FileManagerException& e)
@@ -118,7 +124,7 @@ void MailServer::handleList(const ListMessage& msg)
 
 	try
 	{
-		list = FileManager::getInstance()->getMessageList(msg);
+		list = fileManager_->getMessageList(msg);
 	}
 	catch(const FileManagerException& e)
 	{
@@ -144,7 +150,7 @@ void MailServer::handleRead(const ReadMessage& msg)
 {
 	try
 	{
-		auto pMsg = FileManager::getInstance()->getMessageForRead(msg);
+		auto pMsg = fileManager_->getMessageForRead(msg);
 
 		sendOk(socket_id_);
 
@@ -167,7 +173,7 @@ void MailServer::handleDel(const DelMessage& msg)
 {
 	try
 	{
-		FileManager::getInstance()->removeFile(msg);
+		fileManager_->removeFile(msg);
 
 		sendOk(socket_id_);
 	}

@@ -19,7 +19,6 @@
 
 #include <vector>
 #include <map>
-#include <exception>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
@@ -28,41 +27,26 @@
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/sharable_lock.hpp>
-#include "messages/Messages.h"
 #include "Singleton.h"
+#include "AbstractFileManager.h"
 
-class FileManager : public Singleton<FileManager>
+class FileManager : public Singleton<FileManager>, public AbstractFileManager
 {
 	friend class Singleton<FileManager>;
 
 public:
-	void setDirectoryPath(std::string directory_path);
-	void persistSendMessage(const SendMessage& msg);
-	std::vector<std::string> getMessageList(const ListMessage& msg);
-	boost::shared_ptr<SendMessage> getMessageForRead(const ReadMessage& msg);
-	void removeFile(const DelMessage& msg);
+	virtual void setDirectoryPath(std::string directory_path);
+	virtual void persistSendMessage(const SendMessage& msg);
+	virtual std::vector<std::string> getMessageList(const ListMessage& msg);
+	virtual boost::shared_ptr<SendMessage> getMessageForRead(const ReadMessage& msg);
+	virtual void removeFile(const DelMessage& msg);
+
 private:
 	FileManager();
 	boost::filesystem::path directory_path_;
 	std::map<std::string, int> count_cache_;
 
 	boost::shared_ptr<SendMessage> messageFromFile(std::string filename);
-};
-
-class FileManagerException : std::exception
-{
-public:
-	FileManagerException(std::string error_text) :
-		error_text_(error_text) {}
-
-	~FileManagerException() throw() {}
-
-    virtual const char* what() const throw()
-    {
-        return error_text_.c_str();
-    }
-private:
-    std::string error_text_;
 };
 
 #endif /* FILEMANAGER_H_ */
