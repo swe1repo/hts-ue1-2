@@ -38,9 +38,19 @@ void MailServer::clientConnected()
 {
 	ClientInfo* current_client = ClientRestrictionManager::getInstance()->getCurrentClient();
 
+	int sd = current_client->getSocketDescriptor();
+
 	if( current_client->isLocked() )
 	{
-		closeSocket( current_client->getSocketDescriptor() );
+		DEBUG("The locked client [" << current_client->getIPAddressString() << "] was blocked from connecting.");
+
+		closeSocket( sd );
+	}
+	else
+	{
+		DEBUG("The client [" << current_client->getIPAddressString() << "] was allowed to connect.");
+
+		sendMsg( sd, std::string("1") );
 	}
 }
 

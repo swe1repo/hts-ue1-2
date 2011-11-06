@@ -84,7 +84,11 @@ int main(int argc, char** argv)
 		DEBUG("Error when registering signal handler, catching an inexistant signal will not work.");
 	}
 
+	// set directory path
 	ThreadedFileManager::getInstance()->setDirectoryPath(directory_path);
+
+	// set lockout time to half a minute
+	ClientRestrictionManager::getInstance()->setLockoutTime((time_t) 30*60);
 
 	ws = new WelcomeServer(port);
 

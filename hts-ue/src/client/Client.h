@@ -54,6 +54,7 @@ private:
 	void didReceiveResponse(int socket, boost::shared_ptr<Response> response);
 	void getResponse();
 	bool connectToServer();
+	bool testConnection();
 
 	// displaying
 	char printMenu();

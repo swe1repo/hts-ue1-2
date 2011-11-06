@@ -14,7 +14,7 @@ Client::Client(int port, std::string ip_address) :
 	port_(port),
 	socket_(-1),
 	response_parser_(socket_, this, &Client::didReceiveResponse),
-	last_type_(Message::MessageTypeInvalid),
+	last_type_(Message::MessageTypeLogin),
 	end_receiving_(false),
 	userManager_()
 {
@@ -26,6 +26,8 @@ Client::~Client()
 	{
 		DEBUG("Failed to close socket [" << socket_ << "], because: " << strerror(errno));
 	}
+
+	DEBUG("SOCKET CLOSED.");
 }
 
 void Client::transmitMessage(const Message& msg)
@@ -219,11 +221,38 @@ bool Client::connectToServer()
 	return true;
 }
 
+bool Client::testConnection()
+{
+	char buf[10];
+	int res = read(socket_, &buf[0], sizeof(buf) > 0 );
+
+	if(res == 1)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 void Client::run()
 {
 	if(!connectToServer())
 	{
 		throw NetworkException(errno);
+	}
+
+	if(!testConnection())
+	{
+		std::cout << std::endl << "  "
+				<< "Your IP has been blocked. Please try again later."
+				<< std::endl << std::endl;
+		return;
+	}
+	else
+	{
+		std::cout << std::endl << "  " << "Your IP is not blocked." << std::endl;
 	}
 
 	bool doQuit = false;

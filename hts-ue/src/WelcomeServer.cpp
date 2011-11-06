@@ -14,7 +14,6 @@
 */
 
 #include "WelcomeServer.h"
-#include "ClientRestrictionManager.h"
 
 WelcomeServer::WelcomeServer(int port) :
 	welcome_socket_(-1),
@@ -22,13 +21,13 @@ WelcomeServer::WelcomeServer(int port) :
 	queue_size_(-1),
 	port_(port)
 {
-	// set lockout time to half an hour
-	ClientRestrictionManager::getInstance()->setLockoutTime((time_t) 60*30);
 }
 
 WelcomeServer::~WelcomeServer()
 {
 	shut_down();
+
+	delete ClientRestrictionManager::getInstance();
 }
 
 void WelcomeServer::run()
@@ -57,6 +56,10 @@ void WelcomeServer::run()
 		throw NetworkException(errno);
 		errno = 0;
 	}
+
+	// allow socket re-use
+	int flag = 0;
+	setsockopt(welcome_socket_, SOL_SOCKET, SO_REUSEADDR, &flag, sizeof(flag));
 
 	mainLoop();
 }

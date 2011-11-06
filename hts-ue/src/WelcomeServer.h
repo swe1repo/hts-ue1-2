@@ -32,6 +32,7 @@
 #include "MailServer.h"
 #include "ThreadedFileManager.h"
 #include "NetworkException.h"
+#include "ClientRestrictionManager.h"
 
 #define DEFAULT_BUFFER_SIZE 1024
 #define DEFAULT_QUEUE_SIZE  5

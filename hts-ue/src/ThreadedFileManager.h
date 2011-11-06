@@ -14,6 +14,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
+#include <cstring>
 #include <vector>
 #include <string>
 
@@ -22,6 +23,8 @@
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
 #include <boost/interprocess/sync/sharable_lock.hpp>
+#include <boost/algorithm/string/classification.hpp>
+#include <boost/algorithm/string/split.hpp>
 
 #include "AbstractFileManager.h"
 #include "Singleton.h"
@@ -38,16 +41,22 @@ public:
 	virtual boost::shared_ptr<SendMessage> getMessageForRead(const ReadMessage& msg);
 	virtual void removeFile(const DelMessage& msg);
 	std::string getRandomMessageId();
+
+	// ClientRestrictionManager .config/ipfile
+	std::map<std::string, time_t> loadIpFile(boost::filesystem::path path);
+	void saveIpFile(boost::filesystem::path path, const std::map<std::string, time_t>& ip_map);
 private:
+	static std::string config_directory_;
 	FileLockDelegate lockDelegate_;
 	boost::filesystem::path directory_path_;
 
 	ThreadedFileManager();
 
 	// filesystem handling
+	void createDirectory(boost::filesystem::path path);
 	boost::filesystem::path accessUserDirectory(std::string username);
 	boost::filesystem::path accessDirectory(boost::filesystem::path path);
-	void createDirectory(boost::filesystem::path path);
+	std::string readAll(boost::filesystem::path path);
 
 	// utility
 	void writeMessageToFile(boost::filesystem::path msg_file, const Message& msg);

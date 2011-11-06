@@ -6,21 +6,32 @@
  */
 
 #include "ClientRestrictionManager.h"
+#include "Logging.h"
+
+namespace fs = boost::filesystem;
 
 ClientRestrictionManager::ClientRestrictionManager() :
 	lockout_time_((time_t)60) // default lockout_time_ is 60 seconds
 {
-	// TODO: Load Persistance File
+	try
+	{
+		locked_clients_ = ThreadedFileManager::getInstance()->loadIpFile( fs::path("iplist") );
+	}
+	catch(const FileManagerException& e)
+	{
+		DEBUG(e.what());
+		throw e;
+	}
 }
 
 ClientRestrictionManager::~ClientRestrictionManager()
 {
-	// TODO: Save Persistance File
+	ThreadedFileManager::getInstance()->saveIpFile( fs::path("iplist"), locked_clients_ );
 }
 
 void ClientRestrictionManager::update(time_t deltaT)
 {
-	boost::upgrade_lock<boost::shared_mutex> lock(clients_mutex_);
+	boost::unique_lock<boost::shared_mutex> lock(clients_mutex_);
 
 	auto it = locked_clients_.begin();
 
@@ -29,7 +40,7 @@ void ClientRestrictionManager::update(time_t deltaT)
 		// lockout time is over
 		if( time(0) - it->second > lockout_time_)
 		{
-			boost::unique_lock<boost::shared_mutex> u_lock(clients_mutex_);
+			DEBUG("Unlocked IP: " << it->first);
 
 			// remove the client ip from locked list
 			locked_clients_.erase(it);
@@ -46,6 +57,8 @@ void ClientRestrictionManager::lock(std::string client_ip)
 {
 	boost::unique_lock<boost::shared_mutex> lock(clients_mutex_);
 
+	DEBUG("Locking IP: " << client_ip);
+
 	locked_clients_.insert(std::pair<std::string, time_t>(client_ip, time(0)));
 }
 
@@ -57,7 +70,7 @@ bool ClientRestrictionManager::isLocked(std::string client_ip)
 
 	for(; it != locked_clients_.end(); it++)
 	{
-		// lockout time is over
+		// this client is locked
 		if( client_ip.compare(it->first) == 0)
 		{
 			return true;
@@ -76,3 +89,4 @@ void ClientRestrictionManager::setCurrentClient(ClientInfo* ci)
 {
 	current_client_.reset(ci);
 }
+

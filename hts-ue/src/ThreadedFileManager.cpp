@@ -8,6 +8,8 @@
 #include "ThreadedFileManager.h"
 #include "Logging.h"
 
+std::string ThreadedFileManager::config_directory_(".config");
+
 namespace fs = boost::filesystem;
 namespace ip = boost::interprocess;
 
@@ -201,19 +203,123 @@ void ThreadedFileManager::writeMessageToFile(fs::path msg_file, const Message& m
 // deserializes a message from path __filename__
 boost::shared_ptr<SendMessage> ThreadedFileManager::messageFromFile(std::string filename)
 {
+	try
+	{
+		std::string file_str = readAll( fs::path(filename) );
+
+		return boost::shared_ptr<SendMessage>( new SendMessage(file_str) );
+	}
+	catch(const ConversionException& e)
+	{
+		throw FileManagerException("Failed to convert " + filename + " to message." + e.what());
+	}
+
+// eclipse parser is stupid, prevents warning
+#ifdef __CDT_PARSER__
+	return boost::shared_ptr<SendMessage>();
+#endif
+}
+
+std::map<std::string, time_t> ThreadedFileManager::loadIpFile(boost::filesystem::path path)
+{
+	fs::path ipfile_path = accessDirectory( directory_path_ /
+				 	 	     fs::path( ThreadedFileManager::config_directory_ ) ) /
+				             path;
+
+	if(!fs::exists(ipfile_path))
+	{
+		// first server start theres no iplist yet
+		return std::map<std::string, time_t>();
+	}
+
+	std::string file_str = readAll( ipfile_path );
+
+	std::map<std::string, time_t> retVal;
+	std::stringstream ss( file_str );
+
+	while( true )
+	{
+		std::string line;
+		std::getline(ss, line, '\n');
+
+		if( ss.eof() )
+		{
+			break;
+		}
+
+		std::vector<std::string> tokens;
+
+		// split on space,
+		// tokens are of format: ${IP_ADDRESS} ${UNLOCK_TIME}
+		char * pch;
+		pch = strtok(const_cast<char*>( line.c_str() ), " ");
+
+		while (pch != NULL)
+		{
+			printf ("%s\n",pch);
+			tokens.push_back(std::string(pch));
+			pch = strtok (NULL, " ");
+		}
+
+		DEBUG("First: " << tokens[0] << ", Second: " << tokens[1]);
+
+		time_t conv_time;
+
+		try
+		{
+			// convert to time_t
+			conv_time = boost::lexical_cast<time_t>( tokens[1] );
+		}
+		catch(const boost::bad_lexical_cast& e)
+		{
+			DEBUG("IP file is malformed. Discarding. (LEXICAL CAST)");
+			return std::map<std::string, time_t>();
+		}
+
+		retVal.insert(std::pair<std::string, time_t>(tokens[0], conv_time));
+	}
+
+	DEBUG("Loaded locked IP's from " << ipfile_path.string());
+
+	return retVal;
+}
+
+void ThreadedFileManager::saveIpFile(boost::filesystem::path path,
+									 const std::map<std::string, time_t>& ip_map)
+{
+	fs::path ipfile_path = accessDirectory( directory_path_ /
+				 	 	     fs::path( ThreadedFileManager::config_directory_ ) ) /
+				             path;
+
+	fs::ofstream of;
+
+	of.open( ipfile_path );
+
+	auto it = ip_map.begin();
+
+	for(; it != ip_map.end(); it++)
+	{
+		std::string out;
+
+		out = it->first + " " + boost::lexical_cast<std::string>( it->second ) + "\n";
+
+		of.write(out.c_str(), out.size());
+	}
+
+	of.close();
+
+	DEBUG("Dumped locked IP's to " << ipfile_path.string());
+}
+
+std::string ThreadedFileManager::readAll(boost::filesystem::path path)
+{
 	fs::ifstream ifs;
 
-	fs::path msg_file(filename);
-
-	// obtain shared access for reading - this is a scoped lock
-	ip::file_lock f_lock(msg_file.string().c_str());
-	ip::sharable_lock<ip::file_lock> lock(f_lock);
-
-	ifs.open( msg_file );
+	ifs.open( path );
 
 	if( ifs.fail() )
 	{
-		throw FileManagerException("Failed to open file. [ " + msg_file.string() + " ]");
+		throw FileManagerException("Failed to open file. [ " + path.string() + " ]");
 	}
 
 	ifs.seekg(0, std::ios::end);
@@ -224,7 +330,7 @@ boost::shared_ptr<SendMessage> ThreadedFileManager::messageFromFile(std::string 
 
 	if(len == -1 || ifs.fail())
 	{
-		throw FileManagerException("Failed to get file size. [ " + msg_file.string() + " ]");
+		throw FileManagerException("Failed to get file size. [ " + path.string() + " ]");
 	}
 
 	std::vector<char> buffer(len);
@@ -233,22 +339,10 @@ boost::shared_ptr<SendMessage> ThreadedFileManager::messageFromFile(std::string 
 
 	if(ifs.fail())
 	{
-		throw FileManagerException("Failed to read file content. [ " + msg_file.string() + " ]");
+		throw FileManagerException("Failed to read file content. [ " + path.string() + " ]");
 	}
 
 	ifs.close();
 
-	try
-	{
-		return boost::shared_ptr<SendMessage>(new SendMessage(std::string(buffer.begin(), buffer.end())));
-	}
-	catch(const ConversionException& e)
-	{
-		throw FileManagerException("Failed to convert " + filename + " to message." + e.what());
-	}
-
-	// eclipse parser is stupid, prevents warning
-#ifdef __CDT_PARSER__
-	return boost::shared_ptr<SendMessage>();
-#endif
+	return std::string(buffer.begin(), buffer.end());
 }

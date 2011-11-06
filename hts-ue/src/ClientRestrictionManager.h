@@ -15,10 +15,13 @@
 #include <boost/thread/tss.hpp>
 #include "Singleton.h"
 #include "ClientInfo.h"
+#include "ThreadedFileManager.h"
 
 class ClientRestrictionManager : public Singleton<ClientRestrictionManager>
 {
 public:
+	~ClientRestrictionManager();
+
 	void setLockoutTime(time_t lockout_time);
 	ClientInfo* getCurrentClient();
 	void setCurrentClient(ClientInfo* ci);
@@ -27,7 +30,6 @@ public:
 	void update(time_t deltaT);
 private:
 	ClientRestrictionManager();
-	~ClientRestrictionManager();
 
 	std::map<std::string, time_t> locked_clients_;
 	time_t lockout_time_;
