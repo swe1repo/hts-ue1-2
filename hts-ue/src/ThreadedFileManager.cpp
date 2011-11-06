@@ -11,7 +11,6 @@
 std::string ThreadedFileManager::config_directory_(".config");
 
 namespace fs = boost::filesystem;
-namespace ip = boost::interprocess;
 
 ThreadedFileManager::ThreadedFileManager() :
 	AbstractFileManager()
@@ -228,7 +227,7 @@ std::map<std::string, time_t> ThreadedFileManager::loadIpFile(boost::filesystem:
 
 	if(!fs::exists(ipfile_path))
 	{
-		// first server start theres no iplist yet
+		// first server start - theres no iplist yet
 		return std::map<std::string, time_t>();
 	}
 
@@ -256,12 +255,9 @@ std::map<std::string, time_t> ThreadedFileManager::loadIpFile(boost::filesystem:
 
 		while (pch != NULL)
 		{
-			printf ("%s\n",pch);
 			tokens.push_back(std::string(pch));
 			pch = strtok (NULL, " ");
 		}
-
-		DEBUG("First: " << tokens[0] << ", Second: " << tokens[1]);
 
 		time_t conv_time;
 
