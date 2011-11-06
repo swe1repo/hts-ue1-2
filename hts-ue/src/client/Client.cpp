@@ -7,6 +7,8 @@
 
 #include "Client.h"
 
+namespace fs = boost::filesystem;
+
 Client::Client(int port, std::string ip_address) :
 	ip_address_(ip_address == "localhost" ? "127.0.0.1" : ip_address),
 	port_(port),
@@ -67,7 +69,20 @@ void Client::getResponse()
 
 	while(true)
 	{
-		int size = readline(socket_, &buffer[0], buffer_len);
+		int size;
+		if( (size = response_parser_.getAwaitingSize()) != 0 )
+		{
+			buffer.reserve(size);
+
+			for(int i = 0; i < size; i++)
+			{
+				my_read(socket_, &buffer[i]);
+			}
+		}
+		else
+		{
+			size = readline(socket_, &buffer[0], buffer_len);
+		}
 
 		if( size > 0 )        // properly received data
 		{
@@ -248,30 +263,13 @@ bool Client::presentMainMenu()
 		{
 			SendMessage sm;
 
-			char ctrl2;
 			do
 			{
 				std::string tmp;
 				readParam("Please enter the receivers' names.", tmp);
 				sm.receivers_.push_back(tmp);
-
-				while(true)
-				{
-					readParam("Do you want to enter another receiver? (y/n)", ctrl2);
-
-					if(ctrl2 != 'y' && ctrl2 != 'n')
-					{
-						// invalid control character entered
-						continue;
-					}
-					else
-					{
-						// valid control character entered
-						break;
-					}
-				}
 			}
-			while(ctrl2 == 'y');
+			while( readYesNoQuestion("Do you want to enter another receiver? (y/n)") == true );
 
 			readParam("Please enter your name.", sm.sender_);
 
@@ -279,6 +277,26 @@ bool Client::presentMainMenu()
 
 			readStringUntil("Please enter the message you want to transmit. Terminate with a dot '.' .",
 							sm.body_);
+
+			if( readYesNoQuestion("Do you want to add an attachment? (y/n)") == true )
+			{
+				do
+				{
+					std::string file_path;
+					readParam("Enter the path to the file you wish to attach.", file_path);
+
+					try
+					{
+						sm.attachments_.push_back( readAttachment(file_path) );
+					}
+					catch(const ConversionException& e)
+					{
+						std::cout << std::endl << "  " << "Failed to attach the file, because " <<
+								  e.what() << std::endl;
+					}
+				}
+				while( readYesNoQuestion("Do you want to add another attachment? (y/n)") == true );
+			}
 
 			transmitMessage(sm);
 			break;
@@ -414,4 +432,42 @@ void Client::createAndSendQuitMessage()
 	std::cout << std::endl << "  " << "You requested the server to close the connection." << std::endl;
 
 	transmitMessage(qm);
+}
+
+Attachment Client::readAttachment(std::string file_path)
+{
+	Attachment retVal;
+
+	fs::path path( file_path );
+
+	int size = fs::file_size( path );
+
+	if(size == 0)
+	{
+		throw ConversionException("File at " + file_path + " doesn't exist or can't be read.");
+	}
+
+	retVal.data_.reserve(size);
+
+	fs::ifstream ifs;
+
+	ifs.open( path );
+
+	if(ifs.fail())
+	{
+		throw ConversionException("Failed to open file [ " + path.string() + " ]");
+	}
+
+	ifs.read(&retVal.data_[0], size);
+
+	if(ifs.fail())
+	{
+		throw ConversionException("Failed to read file content. [ " + path.string() + " ]");
+	}
+
+	retVal.data_.assign(retVal.data_.begin(), retVal.data_.begin() + size);
+
+	ifs.close();
+
+	return retVal;
 }

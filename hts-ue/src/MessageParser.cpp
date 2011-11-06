@@ -69,8 +69,8 @@ void MessageParser::digest(boost::shared_ptr<std::string> data)
 			{
 				if(total_lines_ < 0 && data->compare(".") == 0)
 				{
-					// send message ends here
-					parser_state_ = MessageParser::MessageParserStateNewRequest;
+					// Message body ends here
+					parser_state_ = MessageParser::MessageParserStateAwaitingAttachments;
 				}
 			}
 			else
@@ -94,6 +94,51 @@ void MessageParser::digest(boost::shared_ptr<std::string> data)
 			}
 
 			break;
+		case MessageParser::MessageParserStateAwaitingAttachments:
+			DEBUG("Attachment awaiting. Total lines = " << total_lines_ << ", data: " << *data
+					<< ", data size: " << data->size());
+			current_message_data_.push_back(data);
+			total_lines_--;
+
+			try
+			{
+				if(total_lines_ < 0)
+				{
+					total_lines_ = boost::lexical_cast<int>(*data) * 2;
+				}
+				else if(total_lines_ % 2 == 1)
+				{
+					awaiting_size_ = boost::lexical_cast<int>(*data);
+					DEBUG("Awaiting size: " << awaiting_size_);
+				}
+				else
+				{
+					awaiting_size_ = 0;
+				}
+			}
+			catch(const boost::bad_lexical_cast& e)
+			{
+				DEBUG("Failed to convert input to number. Discarding.");
+				parser_state_ = MessageParser::MessageParserStateNewRequest;
+			}
+
+			if(total_lines_ == 0)
+			{
+				// message ends here
+				parser_state_ = MessageParser::MessageParserStateNewRequest;
+			}
+
+			if(parser_state_ == MessageParser::MessageParserStateNewRequest)
+			{
+				// dispatch a finished message to the delegate
+				Message* finished_message = message_factory_.newInstance(current_message_data_);
+
+				// clear message data, get ready for a new run
+				current_message_data_.clear();
+
+				delegate_method_(1, boost::shared_ptr<Message>(finished_message));
+			}
+			break;
 		default:
 			DEBUG("Parser is in impossible parser state.");
 			break;
@@ -103,4 +148,9 @@ void MessageParser::digest(boost::shared_ptr<std::string> data)
 MessageParser::MessageParserState MessageParser::getParserState()
 {
 	return parser_state_;
+}
+
+int MessageParser::getAwaitingSize()
+{
+	return awaiting_size_;
 }

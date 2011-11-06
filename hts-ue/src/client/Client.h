@@ -21,6 +21,8 @@
 #include <string.h>
 #include <errno.h>
 #include <boost/shared_ptr.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include "../messages/Messages.h"
 #include "../NetworkException.h"
 #include "../readline.h"
@@ -107,6 +109,32 @@ private:
 			}
 		}
 	}
+
+	bool readYesNoQuestion(std::string question_text)
+	{
+		while(true)
+		{
+			char ctrl2;
+
+			readParam(question_text, ctrl2);
+
+			if(ctrl2 == 'y')
+			{
+				return true;
+			}
+			else if(ctrl2 == 'n')
+			{
+				return false;
+			}
+			else
+			{
+				// invalid control character entered
+				continue;
+			}
+		}
+	}
+
+	Attachment readAttachment(std::string file_path);
 };
 
 #endif /* CLIENT_H_ */

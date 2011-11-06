@@ -33,6 +33,7 @@ public:
 
 	void digest(boost::shared_ptr<std::string> data, Message::MessageType request_type);
 	void finishedSendMessage(int sd, boost::shared_ptr<Message> msg);
+	int getAwaitingSize();
 private:
 	enum MessageParserState
 	{

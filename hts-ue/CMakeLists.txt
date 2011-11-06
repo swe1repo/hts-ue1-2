@@ -20,4 +20,4 @@ SET_TARGET_PROPERTIES(Client PROPERTIES COMPILE_FLAGS "-DVERBOSE")
 
 TARGET_LINK_LIBRARIES(Server boost_filesystem ldap boost_thread)
 
-TARGET_LINK_LIBRARIES(Client boost_thread)
+TARGET_LINK_LIBRARIES(Client boost_filesystem)

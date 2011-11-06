@@ -70,12 +70,14 @@ void SendMessage::inflate(const std::string& data)
 			body_.append(line + "\n");
 		}
 	}
-/*
+
 	std::getline(ss, line, '\n');
 
+	int num_attachments;
 	try
 	{
-		attachments_.reserve( boost::lexical_cast<int>(line) );
+		attachments_.reserve( num_attachments = boost::lexical_cast<int>(line) );
+		DEBUG(line << " is conv to " << num_attachments);
 	}
 	catch(const boost::bad_lexical_cast& e)
 	{
@@ -85,13 +87,17 @@ void SendMessage::inflate(const std::string& data)
 		throw ConversionException(error_text);
 	}
 
-	foreach(Attachment attachment, attachments_)
+	for(int i = 0; i < num_attachments; i++)
 	{
+		Attachment tmp;
+
 		std::getline(ss, line, '\n');
 
+		int file_size;
 		try
 		{
-			attachment.data_.reserve( boost::lexical_cast<int>(line) );
+			tmp.data_.reserve( file_size = boost::lexical_cast<int>(line) );
+			DEBUG(line << " is conv to " << file_size);
 		}
 		catch(const boost::bad_lexical_cast& e)
 		{
@@ -102,13 +108,22 @@ void SendMessage::inflate(const std::string& data)
 		}
 
 
-		ss.read( &attachment.data_[0], attachment.data_.size() );
-	} */
+		ss.read( &tmp.data_[0], file_size );
 
-	DEBUG("sender: " << sender_ <<
-	    // ", receiver: " << receiver_ <<
-	    ", title: " << title_ <<
-	    ", body: " << body_);
+		if(ss.fail())
+		{
+			throw ConversionException("Serialized Message did not contain as much data as it should.");
+		}
+
+		DEBUG("DATA:: " << &tmp.data_[0]);
+
+		tmp.data_.assign(tmp.data_.begin(),
+						 tmp.data_.begin() + file_size);
+
+		attachments_.push_back(tmp);
+	}
+
+	DEBUG("ATT SIZE: " << attachments_.size() << ", ATT AT 0 SIZE: " << attachments_[0].data_.size());
 }
 
 boost::shared_ptr<std::string> SendMessage::deflate() const
@@ -126,7 +141,7 @@ boost::shared_ptr<std::string> SendMessage::deflate() const
 	char eot[] = EOT_STRING;
 
 	*deflated_string += std::string(&eot[0]) + "\n"  + title_ + "\n" + body_ + ".\n";
-/*
+
 	try
 	{
 		*deflated_string += boost::lexical_cast<std::string>( attachments_.size() ) + "\n";
@@ -134,7 +149,7 @@ boost::shared_ptr<std::string> SendMessage::deflate() const
 		foreach(Attachment attachment, attachments_)
 		{
 			*deflated_string += boost::lexical_cast<std::string>( attachment.data_.size() ) + "\n";
-			*deflated_string += std::string( &attachment.data_[0] );
+			*deflated_string += std::string( attachment.data_.begin(), attachment.data_.end() );
 		}
 	}
 	catch(boost::bad_lexical_cast& e)
@@ -143,7 +158,7 @@ boost::shared_ptr<std::string> SendMessage::deflate() const
 
 		DEBUG(error_text);
 		throw ConversionException(error_text);
-	} */
+	}
 
 	return deflated_string;
 }

@@ -156,3 +156,7 @@ void ResponseParser::finishedSendMessage(int sd, boost::shared_ptr<Message> msg)
 	}
 }
 
+int ResponseParser::getAwaitingSize()
+{
+	return message_parser_.getAwaitingSize();
+}

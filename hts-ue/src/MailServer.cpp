@@ -216,3 +216,7 @@ void MailServer::handleLogin(const LoginMessage& msg)
 	}
 }
 
+int MailServer::getAwaitingSize()
+{
+	return parser_.getAwaitingSize();
+}

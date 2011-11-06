@@ -30,20 +30,23 @@ public:
 	enum MessageParserState
 	{
 		MessageParserStateNewRequest,
-		MessageParserStateParsing
+		MessageParserStateParsing,
+		MessageParserStateAwaitingAttachments
 	};
 
 	template <typename T>
 	MessageParser(int socket_id, T* delegate, void (T::*delegate_method)(int, boost::shared_ptr<Message>)) :
 		socket_id_(socket_id),
 		parser_state_(MessageParserStateNewRequest),
-		total_lines_(0)
+		total_lines_(0),
+		awaiting_size_(0)
 	{
 		this->setDelegate(delegate, delegate_method);
 	}
 
 	void digest(boost::shared_ptr<std::string> data);
 	MessageParserState getParserState();
+	int getAwaitingSize();
 private:
 	Message::MessageType getMessageType(std::string line);
 
@@ -62,6 +65,7 @@ private:
 	MessageParserState parser_state_;
 	Message::MessageType message_type_;
 	int total_lines_;
+	int awaiting_size_;
 	std::vector< boost::shared_ptr<std::string> > current_message_data_;
 };
 

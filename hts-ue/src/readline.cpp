@@ -18,7 +18,7 @@
 
 #define MAXLINE 1500
 
-static ssize_t
+ssize_t
 my_read (int fd, char *ptr)
 {
  static int   read_cnt = 0 ;
@@ -61,5 +61,28 @@ ssize_t readline (int fd, void *vptr, ssize_t maxlen)
  } ;
  *ptr = 0 ;                   // null terminate
  return (n) ;
+}
+
+// read n bytes from a descriptor ...
+ssize_t readn (int fd, void *vptr, size_t n)
+{
+ size_t   nleft ;
+ ssize_t  nread ;
+ char     *ptr ;
+ ptr = (char*)vptr ;
+ nleft = n ;
+ while (nleft > 0) {
+   if ( (nread = read(fd,ptr,nleft)) < 0 ) {
+     if (errno == EINTR)
+       nread = 0 ;             // and call read() again
+     else
+       return (-1) ;           // return –1 on error
+   } else if (nread == 0)
+       break ;                 // EOF
+
+   nleft -= nread ;
+   ptr += nread ;
+ }
+ return (n-nleft); // returns >= 0
 }
 

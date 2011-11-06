@@ -53,6 +53,8 @@ private:
     void handleQuit (const QuitMessage& msg);
     void handleLogin(const LoginMessage& msg);
 
+    int getAwaitingSize();
+
     friend class WelcomeServer;
 };
 

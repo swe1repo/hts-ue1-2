@@ -145,7 +145,21 @@ void WelcomeServer::handleClient(ClientInfo* client_info)
 
 	while(true)
 	{
-		int size = readline(sd, &buffer[0], buffer_len);
+		int size;
+
+		if( (size = ms.getAwaitingSize()) != 0)
+		{
+			buffer.reserve(size);
+
+			for(int i = 0; i < size; i++)
+			{
+				my_read(sd, &buffer[i]);
+			}
+		}
+		else
+		{
+			size = readline(sd, &buffer[0], buffer_len);
+		}
 
 		if( size > 0 )        // properly received message
 		{
