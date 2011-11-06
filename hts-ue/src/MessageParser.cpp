@@ -104,9 +104,13 @@ void MessageParser::digest(boost::shared_ptr<std::string> data)
 			{
 				if(total_lines_ < 0)
 				{
-					total_lines_ = boost::lexical_cast<int>(*data) * 2;
+					total_lines_ = boost::lexical_cast<int>(*data) * 3;
 				}
-				else if(total_lines_ % 2 == 1)
+				else if(total_lines_ % 3 == 2)
+				{
+					DEBUG("Got the filename.");
+				}
+				else if(total_lines_ % 3 == 1)
 				{
 					awaiting_size_ = boost::lexical_cast<int>(*data);
 					DEBUG("Awaiting size: " << awaiting_size_);

@@ -92,6 +92,13 @@ void SendMessage::inflate(const std::string& data)
 		Attachment tmp;
 
 		std::getline(ss, line, '\n');
+		tmp.filename_ = line;
+
+		DEBUG("Filename: " << line);
+
+		std::getline(ss, line, '\n');
+
+		DEBUG("Filesize: " << line);
 
 		int file_size;
 		try
@@ -115,15 +122,11 @@ void SendMessage::inflate(const std::string& data)
 			throw ConversionException("Serialized Message did not contain as much data as it should.");
 		}
 
-		DEBUG("DATA:: " << &tmp.data_[0]);
-
 		tmp.data_.assign(tmp.data_.begin(),
 						 tmp.data_.begin() + file_size);
 
 		attachments_.push_back(tmp);
 	}
-
-	DEBUG("ATT SIZE: " << attachments_.size() << ", ATT AT 0 SIZE: " << attachments_[0].data_.size());
 }
 
 boost::shared_ptr<std::string> SendMessage::deflate() const
@@ -148,6 +151,7 @@ boost::shared_ptr<std::string> SendMessage::deflate() const
 
 		foreach(Attachment attachment, attachments_)
 		{
+			*deflated_string += attachment.filename_ + "\n";
 			*deflated_string += boost::lexical_cast<std::string>( attachment.data_.size() ) + "\n";
 			*deflated_string += std::string( attachment.data_.begin(), attachment.data_.end() );
 		}

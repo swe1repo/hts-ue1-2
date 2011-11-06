@@ -9,11 +9,13 @@
 #define ATTACHMENT_H_
 
 #include <vector>
+#include <string>
 
 class Attachment
 {
 public:
 	Attachment();
+	std::string filename_;
 	std::vector<char> data_;
 };
 

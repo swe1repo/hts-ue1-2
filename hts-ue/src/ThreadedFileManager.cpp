@@ -68,6 +68,11 @@ std::vector<std::string> ThreadedFileManager::getMessageList(const ListMessage& 
 
 	fs::path usr_path = directory_path_ / fs::path(msg.username_);
 
+	if(!fs::is_directory(usr_path))
+	{
+		throw FileManagerException("User directory at " + usr_path.string() + " doesn't exist.");
+	}
+
 	fs::directory_iterator end;
 
 	for(fs::directory_iterator it(usr_path); it != end; it++)

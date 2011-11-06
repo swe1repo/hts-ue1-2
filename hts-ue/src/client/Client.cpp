@@ -183,6 +183,44 @@ void Client::didReceiveResponse(int socket, boost::shared_ptr<Response> response
 			std::cout << " - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
 			std::cout << "  " << "-- Body: " << sm.body_ << std::endl;
 			std::cout << " - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
+			std::cout << "  " << "-- Attachments: " << std::endl;
+
+			unsigned int size = sm.attachments_.size();
+
+			if(size == 0)
+			{
+				std::cout << "   - None." << std::endl;
+			}
+			else
+			{
+				for(unsigned int i = 0; i < size; ++i)
+				{
+					std::cout << "   [" << i << "] -> " << sm.attachments_[i].filename_
+							  << " (Size: " << sm.attachments_[i].data_.size() << " )" << std::endl;
+				}
+			}
+			std::cout << " - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
+
+			while( readYesNoQuestion("Do you want to access an attachment? (y/n)") == true )
+			{
+				unsigned int ctrl;
+
+				readParam("Which attachment do you want to print to stdout? (index 0 - "
+						+ boost::lexical_cast<std::string>( size - 1 ) + ")", ctrl);
+
+				if(ctrl < size && ctrl >= 0)
+				{
+					auto begin = sm.attachments_[ctrl].data_.begin();
+					auto end   = sm.attachments_[ctrl].data_.end();
+
+					// print to stdout
+					std::cout << std::endl << std::string(begin, end) << std::endl;
+				}
+				else
+				{
+					std::cout << "  " << "Please enter a valid index." << std::endl;
+				}
+			}
 			break;
 		}
 		default:
@@ -476,6 +514,7 @@ Attachment Client::readAttachment(std::string file_path)
 		throw ConversionException("File at " + file_path + " doesn't exist or can't be read.");
 	}
 
+	retVal.filename_ = path.filename();
 	retVal.data_.reserve(size);
 
 	fs::ifstream ifs;
