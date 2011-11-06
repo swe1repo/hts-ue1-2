@@ -26,8 +26,6 @@ Client::~Client()
 	{
 		DEBUG("Failed to close socket [" << socket_ << "], because: " << strerror(errno));
 	}
-
-	DEBUG("SOCKET CLOSED.");
 }
 
 void Client::transmitMessage(const Message& msg)
@@ -338,7 +336,8 @@ bool Client::presentMainMenu()
 			}
 			while( readYesNoQuestion("Do you want to enter another receiver? (y/n)") == true );
 
-			readParam("Please enter your name.", sm.sender_);
+			// readParam("Please enter your name.", sm.sender_);
+			sm.sender_ = userManager_.getUsername();
 
 			readParam("Please enter the message's title.", sm.title_);
 
@@ -372,7 +371,8 @@ bool Client::presentMainMenu()
 		{
 			ListMessage lm;
 
-			readParam("Please enter the username for whom you want to request a message list.", lm.username_);
+			// readParam("Please enter the username for whom you want to request a message list.", lm.username_);
+			lm.username_ = userManager_.getUsername();
 
 			transmitMessage(lm);
 			break;
@@ -381,7 +381,8 @@ bool Client::presentMainMenu()
 		{
 			ReadMessage rm;
 
-			readParam("Please enter the receiver's username.", rm.username_);
+			// readParam("Please enter the receiver's username.", rm.username_);
+			rm.username_ = userManager_.getUsername();
 
 			readParam("Please enter the number of the message to display. [0 based index]", rm.message_number_);
 
@@ -392,7 +393,8 @@ bool Client::presentMainMenu()
 		{
 			DelMessage dm;
 
-			readParam("Please enter the receiver's username.", dm.username_);
+			// readParam("Please enter the receiver's username.", dm.username_);
+			dm.username_ = userManager_.getUsername();
 
 			readParam("Please enter the number of the message to delete. [0 based index]", dm.message_number_);
 
