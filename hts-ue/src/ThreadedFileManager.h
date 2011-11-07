@@ -22,10 +22,11 @@
 #include <boost/filesystem/fstream.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/split.hpp>
+#include <boost/interprocess/sync/named_mutex.hpp>
+#include <boost/interprocess/sync/scoped_lock.hpp>
 
 #include "AbstractFileManager.h"
 #include "Singleton.h"
-#include "FileLockDelegate.h"
 #include "MessageIdGenerator.h"
 
 class ThreadedFileManager : public AbstractFileManager, public Singleton<ThreadedFileManager>
@@ -33,10 +34,14 @@ class ThreadedFileManager : public AbstractFileManager, public Singleton<Threade
 public:
 	// AbstractFileManager base
 	virtual void setDirectoryPath(std::string directory_path);
+
+	// message handling
 	virtual void persistSendMessage(const SendMessage& msg);
 	virtual std::vector<std::string> getMessageList(const ListMessage& msg);
 	virtual boost::shared_ptr<SendMessage> getMessageForRead(const ReadMessage& msg);
 	virtual void removeFile(const DelMessage& msg);
+
+	// util
 	std::string getRandomMessageId();
 
 	// ClientRestrictionManager .config/ipfile
@@ -44,7 +49,6 @@ public:
 	void saveIpFile(boost::filesystem::path path, const std::map<std::string, time_t>& ip_map);
 private:
 	static std::string config_directory_;
-	FileLockDelegate lockDelegate_;
 	boost::filesystem::path directory_path_;
 
 	ThreadedFileManager();
@@ -59,6 +63,9 @@ private:
 	void writeMessageToFile(boost::filesystem::path msg_file, const Message& msg);
 	boost::shared_ptr<SendMessage> messageFromFile(std::string filename);
 	boost::filesystem::path getMessageAtIndex(std::string username, int index);
+
+	// threadsafe
+	void persistOneSendMessage(const SendMessage& msg);
 
 	friend class Singleton<ThreadedFileManager>;
 };

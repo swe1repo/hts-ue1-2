@@ -53,11 +53,24 @@ void ThreadedFileManager::persistSendMessage(const SendMessage& msg)
 {
 	foreach(std::string receiver, msg.receivers_)
 	{
-		std::string msg_id = MessageIdGenerator::getInstance()->getUniqueMessageId();
+		const char* cstr = receiver.c_str();
+		try
+		{
+			// exclusive lock on each directory for writing the file
+			boost::interprocess::named_mutex nm(boost::interprocess::open_or_create, cstr);
+			boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(nm);
 
-		auto usr_path = accessUserDirectory(receiver);
+			std::string msg_id = MessageIdGenerator::getInstance()->getUniqueMessageId();
 
-		writeMessageToFile( usr_path / fs::path( msg_id ), msg );
+			auto usr_path = accessUserDirectory(receiver);
+
+			writeMessageToFile( usr_path / fs::path( msg_id ), msg );
+		}
+		catch(const boost::interprocess::interprocess_exception& e)
+		{
+			DEBUG(e.what());
+			boost::interprocess::named_mutex::remove(cstr);
+		}
 	}
 }
 
@@ -66,25 +79,38 @@ std::vector<std::string> ThreadedFileManager::getMessageList(const ListMessage& 
 {
 	std::vector<std::string> retVal;
 
-	fs::path usr_path = directory_path_ / fs::path(msg.username_);
-
-	if(!fs::is_directory(usr_path))
+	const char* cstr = msg.username_.c_str();
+	try
 	{
-		throw FileManagerException("User directory at " + usr_path.string() + " doesn't exist.");
-	}
+		// exclusive lock on each directory for writing the file
+		boost::interprocess::named_mutex nm(boost::interprocess::open_or_create, cstr);
+		boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(nm);
 
-	fs::directory_iterator end;
+		fs::path usr_path = directory_path_ / fs::path(msg.username_);
 
-	for(fs::directory_iterator it(usr_path); it != end; it++)
-	{
-		fs::path msg_file = it->path();
-
-		if( fs::is_regular_file(msg_file) )
+		if(!fs::is_directory(usr_path))
 		{
-			auto pMsg = messageFromFile(msg_file.string());
-
-			retVal.push_back( pMsg->title_ );
+			throw FileManagerException("User directory at " + usr_path.string() + " doesn't exist.");
 		}
+
+		fs::directory_iterator end;
+
+		for(fs::directory_iterator it(usr_path); it != end; it++)
+		{
+			fs::path msg_file = it->path();
+
+			if( fs::is_regular_file(msg_file) )
+			{
+				auto pMsg = messageFromFile(msg_file.string());
+
+				retVal.push_back( pMsg->title_ );
+			}
+		}
+	}
+	catch(const boost::interprocess::interprocess_exception& e)
+	{
+		DEBUG(e.what());
+		boost::interprocess::named_mutex::remove(cstr);
 	}
 
 	return retVal;
@@ -92,33 +118,62 @@ std::vector<std::string> ThreadedFileManager::getMessageList(const ListMessage& 
 
 boost::shared_ptr<SendMessage> ThreadedFileManager::getMessageForRead(const ReadMessage& msg)
 {
-	fs::path path = getMessageAtIndex(msg.username_, msg.message_number_);
+	const char* cstr = msg.username_.c_str();
+	try
+	{
+		// exclusive lock on each directory for writing the file
+		boost::interprocess::named_mutex nm(boost::interprocess::open_or_create, cstr);
+		boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(nm);
 
-	if(path.empty())
-	{
-		throw FileManagerException("File at specified index [" + boost::lexical_cast<std::string>(msg.message_number_) + "] \
-	                    			for path " + path.string() + " doesn't exist.");
+		fs::path path = getMessageAtIndex(msg.username_, msg.message_number_);
+
+		if(path.empty())
+		{
+			throw FileManagerException("File at specified index [" + boost::lexical_cast<std::string>(msg.message_number_) + "] \
+										for path " + path.string() + " doesn't exist.");
+		}
+		else
+		{
+			return messageFromFile( path.string() );
+		}
 	}
-	else
+	catch(const boost::interprocess::interprocess_exception& e)
 	{
-		return messageFromFile( path.string() );
+		DEBUG(e.what());
+		boost::interprocess::named_mutex::remove(cstr);
 	}
+
+	// will never happen
+	return boost::shared_ptr<SendMessage>();
 }
 
 void ThreadedFileManager::removeFile(const DelMessage& msg)
 {
-	fs::path file_path = getMessageAtIndex(msg.username_, msg.message_number_);
-
+	const char* cstr = msg.username_.c_str();
 	try
 	{
-		if(fs::remove(file_path) == false)
+		// exclusive lock on each directory for writing the file
+		boost::interprocess::named_mutex nm(boost::interprocess::open_or_create, cstr);
+		boost::interprocess::scoped_lock<boost::interprocess::named_mutex> lock(nm);
+
+		fs::path file_path = getMessageAtIndex(msg.username_, msg.message_number_);
+
+		try
 		{
-			throw FileManagerException("Failed to remove file at "+ file_path.string() + ", because file does not exist.");
+			if(fs::remove(file_path) == false)
+			{
+				throw FileManagerException("Failed to remove file at "+ file_path.string() + ", because file does not exist.");
+			}
+		}
+		catch(const fs::filesystem_error& e)
+		{
+			throw FileManagerException("Failed to remove file at "+ file_path.string() + ", because " + e.what());
 		}
 	}
-	catch(const fs::filesystem_error& e)
+	catch(const boost::interprocess::interprocess_exception& e)
 	{
-		throw FileManagerException("Failed to remove file at "+ file_path.string() + ", because " + e.what());
+		DEBUG(e.what());
+		boost::interprocess::named_mutex::remove(cstr);
 	}
 }
 
