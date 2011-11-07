@@ -185,5 +185,7 @@ bool LoginManager::sendLDAPRequest(std::string username, std::string password)
 			}
 		}
 	}
+
+	return false;
 #endif
 }
