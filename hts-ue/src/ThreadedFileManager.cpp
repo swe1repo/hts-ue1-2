@@ -204,7 +204,7 @@ void ThreadedFileManager::writeMessageToFile(fs::path msg_file, const Message& m
 		throw FileManagerException("Failed to write to file. [ " + msg_file.string() + " ]");
 	}
 
-	DEBUG("Successfully wrote file " << msg_file.string() << ", content: " << *str);
+	DEBUG("Successfully wrote file " << msg_file.string());
 
 	of.close();
 }

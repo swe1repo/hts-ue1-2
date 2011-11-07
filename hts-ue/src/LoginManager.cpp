@@ -106,7 +106,12 @@ bool LoginManager::sendLDAPRequest(std::string username, std::string password)
 	if(current_client->isLocked() == false)
 	{
 		if(username.compare("asdf") == 0 && password.compare("1234") == 0)
+		{
+			//LDAP Process finished at this point
+			isLoggedIn_ = true;
+			current_client->loginSucceeded();
 			return true;
+		}
 		else
 		{
 			current_client->loginFailed();

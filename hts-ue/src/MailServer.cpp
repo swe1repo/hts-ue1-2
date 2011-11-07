@@ -56,7 +56,7 @@ void MailServer::clientConnected()
 
 void MailServer::clientReceivedData(boost::shared_ptr<std::string> data)
 {
-	DEBUG("Digesting received data: " << *data);
+	// DEBUG("Digesting received data: " << *data);
 
 	try
 	{
@@ -73,7 +73,14 @@ void MailServer::messageReceived(int sd, boost::shared_ptr<Message> msg)
 {
 	DEBUG("A message has been dispatched!");
 
-	switch((*msg).getType())
+	// Don't accept any messages from users that aren't authenticated yet.
+	if( msg->getType() != Message::MessageTypeLogin &&
+		loginManager_.isLoggedIn() == false)
+	{
+		sendErr(sd);
+	}
+
+	switch( msg->getType() )
 	{
 		case Message::MessageTypeSend:
 			handleSend(static_cast<SendMessage&>(*msg));
@@ -114,17 +121,21 @@ void MailServer::handleSend(const SendMessage& msg)
 	{
 		try
 		{
+			DEBUG("PERSISTING SEND");
 			fileManager_->persistSendMessage(msg);
+			DEBUG("PERSISTED SEND");
 			sendOk(socket_id_);
 		}
 		catch(const FileManagerException& e)
 		{
+			DEBUG(e.what());
 			sendErr(socket_id_);
 		}
 	}
 	catch(const NetworkException& e)
 	{
 		DEBUG("Failed to send reply for sendMessage request, because " << e.what());
+		sendErr(socket_id_);
 	}
 }
 

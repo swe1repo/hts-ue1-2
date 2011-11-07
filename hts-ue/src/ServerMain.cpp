@@ -23,6 +23,8 @@
 #include "Logging.h"
 #include "ThreadedFileManager.h"
 
+#define LOCKOUT_TIME 30*60 // IN SECONDS
+
 static WelcomeServer* ws = 0;
 
 void signal_handler(int signal)
@@ -88,7 +90,7 @@ int main(int argc, char** argv)
 	ThreadedFileManager::getInstance()->setDirectoryPath(directory_path);
 
 	// set lockout time to half a minute
-	ClientRestrictionManager::getInstance()->setLockoutTime((time_t) 30*60);
+	ClientRestrictionManager::getInstance()->setLockoutTime((time_t) LOCKOUT_TIME);
 
 	ws = new WelcomeServer(port);
 

@@ -95,7 +95,7 @@ void MessageParser::digest(boost::shared_ptr<std::string> data)
 
 			break;
 		case MessageParser::MessageParserStateAwaitingAttachments:
-			DEBUG("Attachment awaiting. Total lines = " << total_lines_ << ", data: " << *data
+			DEBUG("Attachment awaiting. Total lines = " << total_lines_ << ", data: X too long X"
 					<< ", data size: " << data->size());
 			current_message_data_.push_back(data);
 			total_lines_--;

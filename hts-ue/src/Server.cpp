@@ -62,5 +62,5 @@ void Server::sendMsg(int sd, const std::string& msg)
 		}
 	}
 
-	DEBUG("Sent: " << msg << ", bytes: " << msg.size());
+	DEBUG("Sent bytes: " << msg.size());
 }
