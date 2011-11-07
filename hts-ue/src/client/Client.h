@@ -62,6 +62,7 @@ private:
 	void transmitMessage(const Message& msg);
 	bool presentMainMenu();
 	bool presentLoginMenu();
+	void presentAttachmentMenu(const SendMessage& sm);
 
 	// utility
 	char createMenuWithCollection(const std::vector<std::string>& collection);

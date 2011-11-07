@@ -126,6 +126,11 @@ fs::path ThreadedFileManager::getMessageAtIndex(std::string username, int index)
 {
 	fs::path usr_path = directory_path_ / fs::path(username);
 
+	if(!fs::is_directory(usr_path))
+	{
+		throw FileManagerException("Directory at " + usr_path.string() + " doesn't exist yet.");
+	}
+
 	fs::directory_iterator end;
 	fs::directory_iterator it(usr_path);
 

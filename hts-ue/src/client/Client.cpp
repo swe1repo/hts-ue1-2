@@ -199,26 +199,7 @@ void Client::didReceiveResponse(int socket, boost::shared_ptr<Response> response
 			}
 			std::cout << " - - - - - - - - - - - - - - - - - - - - - - - " << std::endl;
 
-			while( readYesNoQuestion("Do you want to access an attachment? (y/n)") == true )
-			{
-				unsigned int ctrl;
-
-				readParam("Which attachment do you want to print to stdout? (index 0 - "
-						+ boost::lexical_cast<std::string>( size - 1 ) + ")", ctrl);
-
-				if(ctrl < size && ctrl >= 0)
-				{
-					auto begin = sm.attachments_[ctrl].data_.begin();
-					auto end   = sm.attachments_[ctrl].data_.end();
-
-					// print to stdout
-					std::cout << std::endl << std::string(begin, end) << std::endl;
-				}
-				else
-				{
-					std::cout << "  " << "Please enter a valid index." << std::endl;
-				}
-			}
+			presentAttachmentMenu(sm);
 			break;
 		}
 		default:
@@ -451,6 +432,73 @@ bool Client::presentLoginMenu()
 	}
 
 	return doQuit;
+}
+
+void Client::presentAttachmentMenu(const SendMessage& sm)
+{
+	unsigned int size = sm.attachments_.size();
+
+	while( readYesNoQuestion("Do you want to access an attachment? (y/n)") == true )
+	{
+		unsigned int ctrl;
+
+		readParam("Which attachment do you want to access? (index 0 - "
+				+ boost::lexical_cast<std::string>( size - 1 ) + ")", ctrl);
+
+		if(ctrl < size && ctrl >= 0)
+		{
+			int ctrl2;
+			readParam("Do you want to [1] save it to file or [2] print it to stdout?", ctrl2);
+
+			if(ctrl2 == 1)
+			{
+				std::string filename;
+
+				readParam("Where do you want to save the attachment to?", filename);
+
+				fs::ofstream ofs;
+
+				ofs.open( fs::path(filename) );
+
+				if( ofs.fail() )
+				{
+					std::cout << std::endl << "  " << "Failed to access " << filename << std::endl;
+					continue;
+				}
+
+				ofs.write(&sm.attachments_[ctrl].data_[0], sm.attachments_[ctrl].data_.size());
+
+				if( ofs.fail() )
+				{
+					std::cout << std::endl << "  " << "Failed to write to " << filename << std::endl;
+					continue;
+				}
+
+				ofs.close();
+
+				if( !ofs.fail() )
+				{
+					std::cout << std::endl << "  " << "Successfully saved attachment to " << filename << std::endl;
+				}
+			}
+			else if(ctrl2 == 2)
+			{
+				auto begin = sm.attachments_[ctrl].data_.begin();
+				auto end   = sm.attachments_[ctrl].data_.end();
+
+				// print to stdout
+				std::cout << std::endl << std::string(begin, end) << std::endl;
+			}
+			else
+			{
+				std::cout << std::endl << "  " << "Please enter a valid option." << std::endl;
+			}
+		}
+		else
+		{
+			std::cout << std::endl << "  " << "Please enter a valid index." << std::endl;
+		}
+	}
 }
 
 char Client::printLoginMenu()
