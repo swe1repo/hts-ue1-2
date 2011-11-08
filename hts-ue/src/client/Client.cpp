@@ -406,7 +406,7 @@ bool Client::presentLoginMenu()
 
 	switch(ctrl = printLoginMenu())
 	{
-		case '1':
+		case '1':	// LOGIN
 		{
 			LoginMessage lm;
 
@@ -420,7 +420,7 @@ bool Client::presentLoginMenu()
 
 			break;
 		}
-		case '2':
+		case '2':	// QUIT
 			createAndSendQuitMessage();
 			doQuit = true;
 			break;

@@ -73,11 +73,13 @@ void MailServer::messageReceived(int sd, boost::shared_ptr<Message> msg)
 {
 	DEBUG("A message has been dispatched!");
 
-	// Don't accept any messages from users that aren't authenticated yet.
+	// Don't accept messages from users that aren't authenticated yet.
 	if( msg->getType() != Message::MessageTypeLogin &&
+		msg->getType() != Message::MessageTypeQuit  &&
 		loginManager_.isLoggedIn() == false)
 	{
 		sendErr(sd);
+		return;
 	}
 
 	switch( msg->getType() )

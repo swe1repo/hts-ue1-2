@@ -53,8 +53,10 @@ void Server::sendMsg(int sd, const std::string& msg)
 
 		if(ret == -1)
 		{
-			DEBUG(strerror(errno));
+			DEBUG("MSG: " << msg << " : " << strerror(errno) << errno);
+
 			throw NetworkException(errno);
+
 		}
 		else
 		{

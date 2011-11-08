@@ -66,10 +66,11 @@ void ThreadedFileManager::persistSendMessage(const SendMessage& msg)
 
 			writeMessageToFile( usr_path / fs::path( msg_id ), msg );
 		}
-		catch(const boost::interprocess::interprocess_exception& e)
+		catch(...)
 		{
-			DEBUG(e.what());
 			boost::interprocess::named_mutex::remove(cstr);
+
+			throw;
 		}
 	}
 }
@@ -94,6 +95,7 @@ std::vector<std::string> ThreadedFileManager::getMessageList(const ListMessage& 
 		}
 
 		fs::directory_iterator end;
+		std::multimap<std::time_t, std::string> sorted_files;
 
 		for(fs::directory_iterator it(usr_path); it != end; it++)
 		{
@@ -103,14 +105,26 @@ std::vector<std::string> ThreadedFileManager::getMessageList(const ListMessage& 
 			{
 				auto pMsg = messageFromFile(msg_file.string());
 
-				retVal.push_back( pMsg->title_ );
+				auto val = std::pair<std::time_t, std::string>
+                	     			(fs::last_write_time( msg_file ), pMsg->title_);
+
+				sorted_files.insert( val );
 			}
 		}
+
+		auto it2 = sorted_files.begin();
+
+		for(; it2 != sorted_files.end(); it2++)
+		{
+			// append in sorted order
+			retVal.push_back( it2->second );
+		}
 	}
-	catch(const boost::interprocess::interprocess_exception& e)
+	catch(...)
 	{
-		DEBUG(e.what());
 		boost::interprocess::named_mutex::remove(cstr);
+
+		throw;
 	}
 
 	return retVal;
@@ -137,10 +151,11 @@ boost::shared_ptr<SendMessage> ThreadedFileManager::getMessageForRead(const Read
 			return messageFromFile( path.string() );
 		}
 	}
-	catch(const boost::interprocess::interprocess_exception& e)
+	catch(...)
 	{
-		DEBUG(e.what());
 		boost::interprocess::named_mutex::remove(cstr);
+
+		throw;
 	}
 
 	// will never happen
@@ -170,10 +185,11 @@ void ThreadedFileManager::removeFile(const DelMessage& msg)
 			throw FileManagerException("Failed to remove file at "+ file_path.string() + ", because " + e.what());
 		}
 	}
-	catch(const boost::interprocess::interprocess_exception& e)
+	catch(...)
 	{
-		DEBUG(e.what());
 		boost::interprocess::named_mutex::remove(cstr);
+
+		throw;
 	}
 }
 
@@ -188,12 +204,28 @@ fs::path ThreadedFileManager::getMessageAtIndex(std::string username, int index)
 
 	fs::directory_iterator end;
 	fs::directory_iterator it(usr_path);
+	std::multimap<std::time_t, fs::path> sorted_files;
 
-	for(int i = 0; it != end; i++, it++)
+	for(; it != end; it++)
+	{
+		fs::path msg_file = it->path();
+
+		if( fs::is_regular_file(msg_file) )
+		{
+			auto val = std::pair<std::time_t, fs::path>
+            	     			(fs::last_write_time( msg_file ), msg_file);
+
+			sorted_files.insert( val );
+		}
+	}
+
+	auto it2 = sorted_files.begin();
+
+	for(int i = 0; it2 != sorted_files.end(); it2++, i++)
 	{
 		if( i == index )
 		{
-			fs::path msg_file = it->path();
+			fs::path msg_file = it2->second;
 
 			if( fs::is_regular_file(msg_file) )
 			{

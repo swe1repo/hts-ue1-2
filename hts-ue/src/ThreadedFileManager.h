@@ -17,6 +17,7 @@
 #include <cstring>
 #include <vector>
 #include <string>
+#include <map>
 
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
